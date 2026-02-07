@@ -1,0 +1,683 @@
+<html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bookshelf Modes</title>
+  <style>
+    :root { --bg:#0f1115; --panel:#171a21; --text:#e7eaf0; --muted:#9aa3b2; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+           background:var(--bg); color:var(--text); }
+
+    header {
+      padding:12px 14px 10px;
+      position:sticky; top:0; z-index:10;
+      background:linear-gradient(#0f1115, rgba(15,17,21,.92));
+      backdrop-filter: blur(6px);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .titleRow { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    h1 { margin:0; font-size:16px; font-weight:650; letter-spacing:.2px; }
+    .sub { margin-top:6px; color:var(--muted); font-size:12px; white-space: pre-wrap; }
+
+    .wrap { padding:12px 14px 18px; max-width: 980px; margin: 0 auto; }
+
+    /* Top spine strip */
+    .spineStrip {
+      margin-top:10px;
+      display:flex;
+      gap:10px;
+      overflow-x:auto;
+      padding-bottom:10px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .spinePill {
+      flex: 0 0 auto;
+      width:54px;
+      height:110px;
+      border-radius:14px;
+      position:relative;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), 0 12px 24px rgba(0,0,0,.25);
+      border: 1px solid rgba(255,255,255,.10);
+      cursor:pointer;
+      transform: translateY(0);
+      transition: transform .15s ease, outline .15s ease;
+      user-select:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:8px;
+    }
+    .spinePill span{
+      writing-mode: vertical-rl; /* top-to-bottom */
+      font-weight: 700;
+      letter-spacing:.6px;
+      font-size: 12px;
+      color: rgba(255,255,255,.92);
+      text-shadow: 0 1px 2px rgba(0,0,0,.35);
+      text-align:center;
+    }
+    .spinePill.active {
+      transform: translateY(-10px);
+      outline: 2px solid rgba(255,255,255,.25);
+    }
+    .spinePill .miniTag{
+      position:absolute;
+      left:50%;
+      transform: translateX(-50%);
+      bottom:-8px;
+      font-size:10px;
+      padding:3px 8px;
+      border-radius:999px;
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.12);
+      display:none;
+    }
+    .spinePill.active .miniTag{ display:block; }
+
+    /* Main grid */
+    .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap:12px; margin-top:6px; }
+
+    .book {
+      border-radius:14px; padding:12px; min-height:168px; position:relative;
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow: 0 8px 30px rgba(0,0,0,.25);
+      overflow:hidden;
+    }
+    .spine {
+      position:absolute; left:10px; top:10px; bottom:10px; width:54px;
+      border-radius:14px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), 0 12px 24px rgba(0,0,0,.25);
+      display:flex; align-items:center; justify-content:center;
+      padding:8px;
+      pointer-events:none;
+    }
+    .spine span {
+      writing-mode: vertical-rl; /* top-to-bottom */
+      font-weight: 700;
+      letter-spacing:.6px;
+      font-size: 12px;
+      color: rgba(255,255,255,.92);
+      text-shadow: 0 1px 2px rgba(0,0,0,.35);
+      user-select:none;
+      text-align:center;
+      pointer-events:none;
+    }
+    .meta { margin-left:78px; }
+    .name { font-size:13px; font-weight:700; line-height:1.2; }
+    .hex { margin-top:6px; font-size:12px; color:var(--muted); }
+    .path { margin-top:6px; font-size:11px; color: rgba(255,255,255,.55); }
+    .badge {
+      position:absolute; right:10px; top:10px;
+      font-size:11px; padding:6px 10px; border-radius:999px;
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.12);
+      display:none;
+    }
+    .book.active .badge { display:inline-block; }
+    .book.active { outline: 2px solid rgba(255,255,255,.18); }
+
+    .btnRow{
+      margin-top:10px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    button {
+      background:#0f1115; color:var(--text);
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius:12px;
+      padding:9px 10px;
+      font-size:13px;
+      cursor:pointer;
+      touch-action: manipulation;
+    }
+    button.primary { background: rgba(255,255,255,.12); }
+    button.danger { border-color: rgba(255,100,100,.35); }
+    button.small { padding:7px 9px; font-size:12px; }
+    button.ghost { background: transparent; }
+
+    .panel {
+      margin-top:14px;
+      border-radius:14px;
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,.08);
+      padding:12px;
+    }
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
+    label { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
+    input[type="text"], input[type="color"], input[type="number"] {
+      background:#0f1115; color:var(--text);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:14px;
+    }
+    input[type="text"]{ min-width: 220px; }
+    input[type="number"]{ width: 120px; }
+
+    .smallText { font-size:12px; color:var(--muted); margin-top:10px; line-height:1.4; }
+
+    /* Notes modal */
+    .modalBg{
+      position:fixed; inset:0; background: rgba(0,0,0,.55);
+      display:none; align-items:center; justify-content:center;
+      padding:16px;
+      z-index: 50;
+    }
+    .modal{
+      width:min(720px, 100%);
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius:16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.45);
+      padding:12px;
+    }
+    .modalHeader{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:6px 4px 10px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      margin-bottom:10px;
+    }
+    .modalTitle{
+      font-weight:800; font-size:14px;
+    }
+    textarea{
+      width:100%;
+      min-height: 240px;
+      background:#0f1115; color:var(--text);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:14px;
+      line-height:1.35;
+      resize: vertical;
+    }
+    .noteHint{ font-size:12px; color:var(--muted); margin-top:8px; }
+
+    /* Full-page iOS/storage warning */
+    .blocker {
+      padding:18px;
+      min-height:100vh;
+      background:#0f1115;
+      color:#e7eaf0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    }
+    .blocker h2 { margin:0 0 10px; font-size:18px; }
+    .blocker p, .blocker li { color:#9aa3b2; line-height:1.45; }
+    .blocker code { color:#e7eaf0; }
+  </style>
+</head>
+<body>
+<header>
+  <div class="titleRow">
+    <h1>Bookshelf Modes</h1>
+    <button type="button" class="small ghost" id="backBtn" title="Go up one level">⬅ Up</button>
+  </div>
+  <div class="sub" id="activeLine">Active: (none)</div>
+
+  <div class="spineStrip" id="spineStrip"></div>
+</header>
+
+<div class="wrap">
+  <div class="grid" id="grid"></div>
+
+  <div class="panel">
+    <div class="row">
+      <div>
+        <label>Add / create book in current folder</label>
+        <input id="name" type="text" placeholder="e.g., World Building" />
+      </div>
+      <div>
+        <label>Colour</label>
+        <input id="color" type="color" value="#7c3aed" />
+      </div>
+      <div>
+        <button type="button" class="primary" id="addBtn">Add book</button>
+      </div>
+    </div>
+
+    <hr style="border:0;border-top:1px solid rgba(255,255,255,.08); margin:12px 0;">
+
+    <div class="row">
+      <div>
+        <label>Reminder (minutes, 0 = off)</label>
+        <input id="mins" type="number" min="0" value="0" />
+      </div>
+      <div><button type="button" id="enableNotiBtn">Enable notifications</button></div>
+      <div><button type="button" id="startReminderBtn">Start reminder</button></div>
+      <div><button type="button" class="danger" id="stopReminderBtn">Stop reminder</button></div>
+      <div><button type="button" id="clearActiveBtn">Clear active</button></div>
+    </div>
+
+    <div class="smallText">
+      Tip: If you want a “fresh template”, change <b>SAVE_SLOT</b> in the script (e.g. v1 → v2).
+    </div>
+  </div>
+</div>
+
+<!-- Notes modal -->
+<div class="modalBg" id="modalBg" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modalHeader">
+      <div class="modalTitle" id="modalTitle">Notes</div>
+      <button type="button" id="closeModalBtn">Close</button>
+    </div>
+    <textarea id="notesArea" placeholder="Brain dump notes (dot points are perfect)&#10;- ...&#10;- ..."></textarea>
+    <div class="noteHint">Notes save automatically.</div>
+  </div>
+</div>
+
+<script>
+  // ==========================================================
+  // VERSION / SAVE SLOT (EDIT THIS)
+  // Change this value to create a fresh “save file” per template
+  // Examples: "v1", "v2", "template_clean", "personal", etc.
+  // ==========================================================
+  const SAVE_SLOT = "v1";
+
+  // ==========================================================
+  // Per-file + per-slot namespace so different templates don't
+  // accidentally share the same saved data.
+  // ==========================================================
+  const FILE_ID = btoa(unescape(encodeURIComponent(location.href)))
+    .replace(/=+/g, "").slice(0, 24);
+  const NS = `ML_${FILE_ID}_${SAVE_SLOT}_`;
+
+  const LS_KEY    = NS + "modes";
+  const LS_ACTIVE = NS + "active";
+  const LS_REM    = NS + "reminder";
+  const LS_PATH   = NS + "path";
+
+  const grid = document.getElementById("grid");
+  const spineStrip = document.getElementById("spineStrip");
+  const activeLine = document.getElementById("activeLine");
+  const nameEl = document.getElementById("name");
+  const colorEl = document.getElementById("color");
+  const minsEl = document.getElementById("mins");
+  const backBtn = document.getElementById("backBtn");
+
+  const modalBg = document.getElementById("modalBg");
+  const modalTitle = document.getElementById("modalTitle");
+  const notesArea = document.getElementById("notesArea");
+  const closeModalBtn = document.getElementById("closeModalBtn");
+
+  let reminderTimer = null;
+  let openNotesForId = null;
+
+  function storageOK() {
+    try {
+      const k = "__ml_test__";
+      localStorage.setItem(k, "1");
+      localStorage.removeItem(k);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  // If iOS is opening in a restricted preview, localStorage often fails.
+  if (!storageOK()) {
+    document.body.innerHTML = `
+      <div class="blocker">
+        <h2>Mind Library can’t run properly here</h2>
+        <p>
+          This usually happens on iPad/iPhone when the file is opened in a preview viewer
+          (e.g., email attachment preview or Files “Quick Look”) instead of a normal browser page.
+        </p>
+        <p><b>Most streamlined fix:</b></p>
+        <ol>
+          <li>Put this file on a normal web link (HTTPS) — simplest is a free “drop” host.</li>
+          <li>Open the link in Safari.</li>
+          <li>Tap Share → <b>Add to Home Screen</b>.</li>
+        </ol>
+        <p>
+          Once it’s opened from Safari/home screen, the books will load and saving will work normally.
+        </p>
+        <p style="margin-top:14px;">
+          Technical note: saving requires <code>localStorage</code>, which is blocked in this viewer.
+        </p>
+      </div>
+    `;
+    throw new Error("localStorage unavailable in this environment");
+  }
+
+  function safeUUID() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "id_" + Math.random().toString(16).slice(2) + "_" + Date.now();
+  }
+
+  function mkBook(name, color) {
+    return { id: safeUUID(), name, color: normalizeHex(color), notes: "", children: [] };
+  }
+
+  function defaultState() {
+    return {
+      roots: [
+        mkBook("Strands of Dolon", "#7c3aed"),
+        mkBook("World Building", "#10b981"),
+        mkBook("Archetype System", "#3b82f6"),
+        mkBook("Project Arcadia", "#f59e0b"),
+        mkBook("Duality Theory", "#111827"),
+        mkBook("Work", "#6b7280"),
+        mkBook("Fiancé", "#fb7185"),
+      ]
+    };
+  }
+
+  function normalizeHex(val) {
+    val = (val || "").trim();
+    if (!val) return "#7c3aed";
+    if (!val.startsWith("#")) val = "#" + val;
+    if (!/^#([0-9a-fA-F]{6})$/.test(val)) return "#7c3aed";
+    return val.toLowerCase();
+  }
+  function escapeHtml(s) {
+    return (s ?? "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[c]));
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return defaultState();
+  }
+  function saveState(state) {
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+  }
+  function getActiveId() { return localStorage.getItem(LS_ACTIVE) || ""; }
+  function setActiveId(id) { localStorage.setItem(LS_ACTIVE, id || ""); }
+
+  function getPath() {
+    try { return JSON.parse(localStorage.getItem(LS_PATH) || "[]"); }
+    catch { return []; }
+  }
+  function setPath(pathArr) { localStorage.setItem(LS_PATH, JSON.stringify(pathArr)); }
+
+  function findBookById(list, id) {
+    for (const b of list) {
+      if (b.id === id) return b;
+      const inChild = findBookById(b.children || [], id);
+      if (inChild) return inChild;
+    }
+    return null;
+  }
+
+  function getFolderList(state, pathArr) {
+    let current = state.roots;
+    for (const id of pathArr) {
+      const folder = current.find(x => x.id === id);
+      if (!folder) return state.roots;
+      folder.children = folder.children || [];
+      current = folder.children;
+    }
+    return current;
+  }
+
+  function getBreadcrumbNames(state, pathArr) {
+    const names = [];
+    let current = state.roots;
+    for (const id of pathArr) {
+      const folder = current.find(x => x.id === id);
+      if (!folder) break;
+      names.push(folder.name);
+      current = folder.children || [];
+    }
+    return names;
+  }
+
+  function moveItem(arr, fromIdx, toIdx) {
+    if (toIdx < 0 || toIdx >= arr.length) return;
+    const [item] = arr.splice(fromIdx, 1);
+    arr.splice(toIdx, 0, item);
+  }
+
+  function openNotes(bookId) {
+    const state = loadState();
+    const book = findBookById(state.roots, bookId);
+    if (!book) return;
+
+    openNotesForId = bookId;
+    modalTitle.textContent = `Notes — ${book.name}`;
+    notesArea.value = book.notes || "";
+    modalBg.style.display = "flex";
+    modalBg.setAttribute("aria-hidden", "false");
+    notesArea.focus();
+  }
+  function closeNotes() {
+    openNotesForId = null;
+    modalBg.style.display = "none";
+    modalBg.setAttribute("aria-hidden", "true");
+  }
+
+  closeModalBtn.addEventListener("click", closeNotes);
+  modalBg.addEventListener("click", (e) => { if (e.target === modalBg) closeNotes(); });
+
+  notesArea.addEventListener("input", () => {
+    if (!openNotesForId) return;
+    const state = loadState();
+    const book = findBookById(state.roots, openNotesForId);
+    if (!book) return;
+    book.notes = notesArea.value;
+    saveState(state);
+  });
+
+  function render() {
+    const state = loadState();
+    const activeId = getActiveId();
+    const pathArr = getPath();
+
+    const folderList = getFolderList(state, pathArr);
+    const crumbs = getBreadcrumbNames(state, pathArr);
+    backBtn.style.visibility = pathArr.length ? "visible" : "hidden";
+
+    const activeBook = activeId ? findBookById(state.roots, activeId) : null;
+    activeLine.textContent =
+      "Active: " + (activeBook ? activeBook.name : "(none)") +
+      (crumbs.length ? `  •  Folder: ${crumbs.join(" › ")}` : "  •  Folder: (root)");
+
+    // Top strip spines
+    spineStrip.innerHTML = "";
+    folderList.forEach(book => {
+      const pill = document.createElement("div");
+      pill.className = "spinePill" + (book.id === activeId ? " active" : "");
+      pill.style.background = book.color;
+      pill.dataset.bookId = book.id;
+      pill.innerHTML = `<span>${escapeHtml(book.name)}</span><div class="miniTag">ACTIVE</div>`;
+      spineStrip.appendChild(pill);
+    });
+
+    // Main grid
+    grid.innerHTML = "";
+    folderList.forEach(book => {
+      const hasNotes = (book.notes || "").trim().length > 0;
+
+      const card = document.createElement("div");
+      card.className = "book" + (book.id === activeId ? " active" : "");
+      card.dataset.bookId = book.id;
+
+      card.innerHTML = `
+        <div class="spine" style="background:${book.color}">
+          <span>${escapeHtml(book.name)}</span>
+        </div>
+        <div class="meta">
+          <div class="name">${escapeHtml(book.name)}</div>
+          <div class="hex">${book.color.toUpperCase()}</div>
+          <div class="path">Subsections: ${book.children?.length || 0} • Notes: ${hasNotes ? "Yes" : "No"}</div>
+
+          <div class="btnRow">
+            <button type="button" class="small primary" data-act="active">Set active</button>
+            <button type="button" class="small" data-act="enter">Subfolder</button>
+            <button type="button" class="small" data-act="notes">Notes</button>
+            <button type="button" class="small" data-act="edit">Edit</button>
+            <button type="button" class="small danger" data-act="delete">Delete</button>
+          </div>
+
+          <div class="btnRow" style="margin-top:8px;">
+            <button type="button" class="small" data-act="up">⬆ Move</button>
+            <button type="button" class="small" data-act="down">⬇ Move</button>
+          </div>
+        </div>
+        <div class="badge">ACTIVE</div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  // Event delegation (stable on mobile + PC)
+  spineStrip.addEventListener("click", (e) => {
+    const pill = e.target.closest(".spinePill");
+    if (!pill) return;
+    setActiveId(pill.dataset.bookId);
+    render();
+  });
+
+  grid.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-act]");
+    if (!btn) return;
+
+    const act = btn.dataset.act;
+    const card = btn.closest(".book");
+    if (!card) return;
+
+    const bookId = card.dataset.bookId;
+
+    const state = loadState();
+    const pathArr = getPath();
+    const listRef = getFolderList(state, pathArr);
+    const idx = listRef.findIndex(x => x.id === bookId);
+    if (idx < 0) return;
+
+    const b = listRef[idx];
+
+    if (act === "active") {
+      setActiveId(bookId);
+      render();
+      return;
+    }
+    if (act === "enter") {
+      setPath([...pathArr, bookId]);
+      render();
+      return;
+    }
+    if (act === "notes") {
+      openNotes(bookId);
+      return;
+    }
+    if (act === "edit") {
+      const newName = prompt("New name:", b.name);
+      if (newName === null) return;
+
+      // Keep this simple for now; later we can replace with a colour picker UI.
+      const newColor = prompt("New hex colour (e.g. #7c3aed):", b.color);
+      if (newColor === null) return;
+
+      b.name = (newName.trim() || b.name);
+      b.color = normalizeHex(newColor);
+      saveState(state);
+      render();
+      return;
+    }
+    if (act === "delete") {
+      const ok = confirm(`Delete "${b.name}"? (Subsections and notes will also be removed)`);
+      if (!ok) return;
+      listRef.splice(idx, 1);
+      if (getActiveId() === bookId) setActiveId("");
+      saveState(state);
+      render();
+      return;
+    }
+    if (act === "up") {
+      moveItem(listRef, idx, idx - 1);
+      saveState(state);
+      render();
+      return;
+    }
+    if (act === "down") {
+      moveItem(listRef, idx, idx + 1);
+      saveState(state);
+      render();
+      return;
+    }
+  });
+
+  backBtn.addEventListener("click", () => {
+    const pathArr = getPath();
+    if (!pathArr.length) return;
+    pathArr.pop();
+    setPath(pathArr);
+    render();
+  });
+
+  document.getElementById("addBtn").addEventListener("click", () => {
+    const state = loadState();
+    const pathArr = getPath();
+    const folderList = getFolderList(state, pathArr);
+
+    const nm = (nameEl.value || "").trim();
+    if (!nm) return alert("Give the book a name.");
+    const col = colorEl.value || "#7c3aed";
+
+    folderList.push(mkBook(nm, col));
+    saveState(state);
+    nameEl.value = "";
+    render();
+  });
+
+  document.getElementById("clearActiveBtn").addEventListener("click", () => {
+    setActiveId("");
+    render();
+  });
+
+  // Reminders (unchanged)
+  document.getElementById("enableNotiBtn").addEventListener("click", async () => {
+    if (!("Notification" in window)) return alert("Notifications not supported here.");
+    const perm = await Notification.requestPermission();
+    alert("Notification permission: " + perm);
+  });
+
+  document.getElementById("startReminderBtn").addEventListener("click", () => {
+    const mins = Math.max(0, parseInt(minsEl.value || "0", 10));
+    localStorage.setItem(LS_REM, String(mins));
+    startReminder(mins);
+  });
+
+  document.getElementById("stopReminderBtn").addEventListener("click", () => stopReminder());
+
+  function startReminder(mins) {
+    stopReminder();
+    if (!mins) return;
+
+    reminderTimer = setInterval(() => {
+      const state = loadState();
+      const activeId = getActiveId();
+      const active = activeId ? findBookById(state.roots, activeId) : null;
+      if (!active) return;
+
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("Mode reminder", { body: `You are in: ${active.name}` });
+      } else {
+        console.log("Mode reminder:", active.name);
+      }
+    }, mins * 60 * 1000);
+  }
+
+  function stopReminder() {
+    if (reminderTimer) clearInterval(reminderTimer);
+    reminderTimer = null;
+  }
+
+  // restore reminder
+  const savedMins = parseInt(localStorage.getItem(LS_REM) || "0", 10);
+  minsEl.value = String(savedMins);
+
+  render();
+  if (savedMins) startReminder(savedMins);
+</script>
+</body>
+</html>

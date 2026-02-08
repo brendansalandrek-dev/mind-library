@@ -1,9 +1,9 @@
-<html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Bookshelf Modes</title>
+  <title>Mind Library</title>
   <style>
     :root { --bg:#0f1115; --panel:#171a21; --text:#e7eaf0; --muted:#9aa3b2; }
     * { box-sizing: border-box; }
@@ -213,7 +213,7 @@
 <body>
 <header>
   <div class="titleRow">
-    <h1>Bookshelf Modes</h1>
+    <h1>Mind Library</h1>
     <button type="button" class="small ghost" id="backBtn" title="Go up one level">⬅ Up</button>
   </div>
   <div class="sub" id="activeLine">Active: (none)</div>
@@ -228,29 +228,38 @@
     <div class="row">
       <div>
         <label>Add / create book in current folder</label>
-        <input id="name" type="text" placeholder="e.g., World Building" />
+        <input id="name" type="text" placeholder="e.g., Rest" />
       </div>
       <div>
         <label>Colour</label>
-        <input id="color" type="color" value="#7c3aed" />
+        <input id="color" type="color" value="#6b7280" />
       </div>
       <div>
         <button type="button" class="primary" id="addBtn">Add book</button>
       </div>
     </div>
 
+<div class="row" style="margin-top:10px;">
+  <div><button type="button" id="exportBtn">Export backup</button></div>
+  <div><button type="button" id="importBtn">Import backup</button></div>
+  <input type="file" id="importFile" accept="application/json" style="display:none;">
+</div>
+
     <hr style="border:0;border-top:1px solid rgba(255,255,255,.08); margin:12px 0;">
 
-    <div class="row">
-      <div>
-        <label>Reminder (minutes, 0 = off)</label>
-        <input id="mins" type="number" min="0" value="0" />
-      </div>
-      <div><button type="button" id="enableNotiBtn">Enable notifications</button></div>
-      <div><button type="button" id="startReminderBtn">Start reminder</button></div>
-      <div><button type="button" class="danger" id="stopReminderBtn">Stop reminder</button></div>
-      <div><button type="button" id="clearActiveBtn">Clear active</button></div>
-    </div>
+<div class="row" id="reminderRow">
+  <div>
+    <label>Reminder (minutes, 0 = off)</label>
+    <input id="mins" type="number" min="0" value="0" />
+  </div>
+  <div><button type="button" id="enableNotiBtn">Enable notifications</button></div>
+  <div><button type="button" id="startReminderBtn">Start reminder</button></div>
+  <div><button type="button" class="danger" id="stopReminderBtn">Stop reminder</button></div>
+</div>
+
+<div class="row" style="margin-top:10px;">
+  <div><button type="button" id="clearActiveBtn">Clear active</button></div>
+</div>
 
     <div class="smallText">
       Tip: If you want a “fresh template”, change <b>SAVE_SLOT</b> in the script (e.g. v1 → v2).
@@ -277,6 +286,7 @@
   // Examples: "v1", "v2", "template_clean", "personal", etc.
   // ==========================================================
   const SAVE_SLOT = "v1";
+  const REMINDERS_ENABLED = false;
 
   // ==========================================================
   // Per-file + per-slot namespace so different templates don't
@@ -298,6 +308,10 @@
   const colorEl = document.getElementById("color");
   const minsEl = document.getElementById("mins");
   const backBtn = document.getElementById("backBtn");
+
+  const exportBtn = document.getElementById("exportBtn");
+  const importBtn = document.getElementById("importBtn");
+  const importFile = document.getElementById("importFile");
 
   const modalBg = document.getElementById("modalBg");
   const modalTitle = document.getElementById("modalTitle");
@@ -327,15 +341,7 @@
           This usually happens on iPad/iPhone when the file is opened in a preview viewer
           (e.g., email attachment preview or Files “Quick Look”) instead of a normal browser page.
         </p>
-        <p><b>Most streamlined fix:</b></p>
-        <ol>
-          <li>Put this file on a normal web link (HTTPS) — simplest is a free “drop” host.</li>
-          <li>Open the link in Safari.</li>
-          <li>Tap Share → <b>Add to Home Screen</b>.</li>
-        </ol>
-        <p>
-          Once it’s opened from Safari/home screen, the books will load and saving will work normally.
-        </p>
+        <p><b>Fix:</b> open the official GitHub Pages URL in Safari, then Share → <b>Add to Home Screen</b>.</p>
         <p style="margin-top:14px;">
           Technical note: saving requires <code>localStorage</code>, which is blocked in this viewer.
         </p>
@@ -349,47 +355,141 @@
     return "id_" + Math.random().toString(16).slice(2) + "_" + Date.now();
   }
 
+  function normalizeHex(val) {
+    val = (val || "").trim();
+    if (!val) return "#6b7280";
+    if (!val.startsWith("#")) val = "#" + val;
+    if (!/^#([0-9a-fA-F]{6})$/.test(val)) return "#6b7280";
+    return val.toLowerCase();
+  }
+
   function mkBook(name, color) {
     return { id: safeUUID(), name, color: normalizeHex(color), notes: "", children: [] };
   }
 
   function defaultState() {
-    return {
-      roots: [
-        mkBook("Strands of Dolon", "#7c3aed"),
-        mkBook("World Building", "#10b981"),
-        mkBook("Archetype System", "#3b82f6"),
-        mkBook("Project Arcadia", "#f59e0b"),
-        mkBook("Duality Theory", "#111827"),
-        mkBook("Work", "#6b7280"),
-        mkBook("Fiancé", "#fb7185"),
-      ]
-    };
+    // Only one neutral default for all users
+    return { roots: [ mkBook("Rest", "#6b7280") ] };
   }
 
-  function normalizeHex(val) {
-    val = (val || "").trim();
-    if (!val) return "#7c3aed";
-    if (!val.startsWith("#")) val = "#" + val;
-    if (!/^#([0-9a-fA-F]{6})$/.test(val)) return "#7c3aed";
-    return val.toLowerCase();
-  }
   function escapeHtml(s) {
     return (s ?? "").replace(/[&<>"']/g, c => ({
       "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
     }[c]));
   }
 
-  function loadState() {
-    try {
-      const raw = localStorage.getItem(LS_KEY);
-      if (raw) return JSON.parse(raw);
-    } catch {}
-    return defaultState();
+function loadState() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+
+      // Safety: if data is missing or corrupted, restore default Rest book
+      if (!parsed || !Array.isArray(parsed.roots) || parsed.roots.length === 0) {
+        const st = defaultState();
+        saveState(st);
+        return st;
+      }
+
+      return parsed;
+    }
+  } catch {}
+
+  // First run: create default state ONCE and save it,
+  // so the "Rest" book keeps the same ID.
+  const st = defaultState();
+  saveState(st);
+  return st;
+}
+  function saveState(state) { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+
+function buildBackupObject() {
+  return {
+    meta: {
+      app: "Mind Library",
+      saveSlot: SAVE_SLOT,
+      createdAt: new Date().toISOString(),
+    },
+    data: {
+      state: loadState(),
+      activeId: getActiveId(),
+      path: getPath(),
+      reminderMins: localStorage.getItem(LS_REM) || "0",
+    }
+  };
+}
+
+function downloadJson(filename, obj) {
+  const json = JSON.stringify(obj, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  URL.revokeObjectURL(url);
+}
+
+exportBtn.addEventListener("click", () => {
+  try {
+    const backup = buildBackupObject();
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+    downloadJson(`mind-library-backup-${SAVE_SLOT}-${stamp}.json`, backup);
+  } catch (e) {
+    alert("Export failed. See console.");
+    console.error(e);
   }
-  function saveState(state) {
-    localStorage.setItem(LS_KEY, JSON.stringify(state));
+});
+
+importBtn.addEventListener("click", () => {
+  importFile.value = ""; // allow importing same file twice
+  importFile.click();
+});
+
+importFile.addEventListener("change", async () => {
+  const file = importFile.files && importFile.files[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const backup = JSON.parse(text);
+
+    // Basic validation
+    if (!backup || !backup.data || !backup.data.state) {
+      alert("That file doesn't look like a Mind Library backup.");
+      return;
+    }
+
+    const ok = confirm(
+      "Importing will overwrite your current library in this SAVE_SLOT.\n\nProceed?"
+    );
+    if (!ok) return;
+
+    // Restore
+    saveState(backup.data.state);
+    setActiveId(backup.data.activeId || "");
+    setPath(Array.isArray(backup.data.path) ? backup.data.path : []);
+    localStorage.setItem(LS_REM, String(backup.data.reminderMins || "0"));
+
+    // Apply reminder UI/state
+    const savedMins = parseInt(localStorage.getItem(LS_REM) || "0", 10);
+    minsEl.value = String(savedMins);
+
+    stopReminder();
+    render();
+    if (savedMins && REMINDERS_ENABLED) startReminder(savedMins);
+
+    alert("Import complete.");
+  } catch (e) {
+    alert("Import failed. Make sure you selected a valid JSON backup.");
+    console.error(e);
   }
+});
+
   function getActiveId() { return localStorage.getItem(LS_ACTIVE) || ""; }
   function setActiveId(id) { localStorage.setItem(LS_ACTIVE, id || ""); }
 
@@ -449,6 +549,7 @@
     modalBg.setAttribute("aria-hidden", "false");
     notesArea.focus();
   }
+
   function closeNotes() {
     openNotesForId = null;
     modalBg.style.display = "none";
@@ -479,7 +580,7 @@
     const activeBook = activeId ? findBookById(state.roots, activeId) : null;
     activeLine.textContent =
       "Active: " + (activeBook ? activeBook.name : "(none)") +
-      (crumbs.length ? `  •  Folder: ${crumbs.join(" › ")}` : "  •  Folder: (root)");
+      (crumbs.length ? `  •  Folder: ${crumbs.join(" › ")}` : "");
 
     // Top strip spines
     spineStrip.innerHTML = "";
@@ -529,7 +630,7 @@
     });
   }
 
-  // Event delegation (stable on mobile + PC)
+  // Event delegation
   spineStrip.addEventListener("click", (e) => {
     const pill = e.target.closest(".spinePill");
     if (!pill) return;
@@ -573,8 +674,7 @@
       const newName = prompt("New name:", b.name);
       if (newName === null) return;
 
-      // Keep this simple for now; later we can replace with a colour picker UI.
-      const newColor = prompt("New hex colour (e.g. #7c3aed):", b.color);
+      const newColor = prompt("New hex colour (e.g. #6b7280):", b.color);
       if (newColor === null) return;
 
       b.name = (newName.trim() || b.name);
@@ -621,7 +721,7 @@
 
     const nm = (nameEl.value || "").trim();
     if (!nm) return alert("Give the book a name.");
-    const col = colorEl.value || "#7c3aed";
+    const col = colorEl.value || "#6b7280";
 
     folderList.push(mkBook(nm, col));
     saveState(state);
@@ -634,18 +734,25 @@
     render();
   });
 
-  // Reminders (unchanged)
+  // Reminders
   document.getElementById("enableNotiBtn").addEventListener("click", async () => {
     if (!("Notification" in window)) return alert("Notifications not supported here.");
     const perm = await Notification.requestPermission();
     alert("Notification permission: " + perm);
   });
 
-  document.getElementById("startReminderBtn").addEventListener("click", () => {
-    const mins = Math.max(0, parseInt(minsEl.value || "0", 10));
-    localStorage.setItem(LS_REM, String(mins));
-    startReminder(mins);
-  });
+document.getElementById("startReminderBtn").addEventListener("click", () => {
+  const mins = Math.max(0, parseInt(minsEl.value || "0", 10));
+
+  // If no active book is set, the reminder has nothing to remind you about.
+  if (!getActiveId()) {
+    alert("Set an active book first (press 'Set active' on a book), then start the reminder.");
+    return;
+  }
+
+  localStorage.setItem(LS_REM, String(mins));
+  startReminder(mins);
+});
 
   document.getElementById("stopReminderBtn").addEventListener("click", () => stopReminder());
 
@@ -677,7 +784,13 @@
   minsEl.value = String(savedMins);
 
   render();
-  if (savedMins) startReminder(savedMins);
+
+const reminderRow = document.getElementById("reminderRow");
+if (!REMINDERS_ENABLED && reminderRow) {
+  reminderRow.style.display = "none";
+}
+
+  if (savedMins && REMINDERS_ENABLED) startReminder(savedMins);
 </script>
 </body>
 </html>

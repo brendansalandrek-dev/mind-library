@@ -5,7 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Mind Library</title>
   <style>
-    :root { --bg:#0f1115; --panel:#171a21; --text:#e7eaf0; --muted:#9aa3b2; }
+    :root {
+      --bg:#0f1115;
+      --panel:#171a21;
+      --text:#e7eaf0;
+      --muted:#9aa3b2;
+
+      /* Bookcase theme */
+      --wood1:#3a2417;
+      --wood2:#2b1a12;
+      --wood3:#4a2d1c;
+
+--t_black: #000000;
+--t_dk:    #2b2b2b;
+--t_mid:   #6b7280;
+--t_lt:    #cbd5e1;
+--t_white: #ffffff;
+
+--wallW: clamp(10px, 2.2vw, 18px);     /* wall thickness */
+--innerGap: clamp(6px, 1.4vw, 12px);   /* gap between wall and books */
+--safeL: env(safe-area-inset-left, 0px);
+--safeR: env(safe-area-inset-right, 0px);
+
+    }
     * { box-sizing: border-box; }
     body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
            background:var(--bg); color:var(--text); }
@@ -21,63 +43,100 @@
     h1 { margin:0; font-size:16px; font-weight:650; letter-spacing:.2px; }
     .sub { margin-top:6px; color:var(--muted); font-size:12px; white-space: pre-wrap; }
 
-    .wrap { padding:12px 14px 18px; max-width: 980px; margin: 0 auto; }
+    .wrap {
+  position: relative;
 
-    /* Top spine strip */
-    .spineStrip {
-      margin-top:10px;
-      display:flex;
-      gap:10px;
-      overflow-x:auto;
-      padding-bottom:10px;
-      -webkit-overflow-scrolling: touch;
-    }
-    .spinePill {
-      flex: 0 0 auto;
-      width:54px;
-      height:110px;
-      border-radius:14px;
-      position:relative;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), 0 12px 24px rgba(0,0,0,.25);
-      border: 1px solid rgba(255,255,255,.10);
-      cursor:pointer;
-      transform: translateY(0);
-      transition: transform .15s ease, outline .15s ease;
-      user-select:none;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:8px;
-    }
-    .spinePill span{
-      writing-mode: vertical-rl; /* top-to-bottom */
-      font-weight: 700;
-      letter-spacing:.6px;
-      font-size: 12px;
-      color: rgba(255,255,255,.92);
-      text-shadow: 0 1px 2px rgba(0,0,0,.35);
-      text-align:center;
-    }
-    .spinePill.active {
-      transform: translateY(-10px);
-      outline: 2px solid rgba(255,255,255,.25);
-    }
-    .spinePill .miniTag{
-      position:absolute;
-      left:50%;
-      transform: translateX(-50%);
-      bottom:-8px;
-      font-size:10px;
-      padding:3px 8px;
-      border-radius:999px;
-      background: rgba(255,255,255,.10);
-      border: 1px solid rgba(255,255,255,.12);
-      display:none;
-    }
-    .spinePill.active .miniTag{ display:block; }
+  padding-top: 0px;
+  padding-bottom: 22px;
+  padding-left:  calc(16px + var(--wallW) + var(--innerGap) + var(--safeL));
+  padding-right: calc(16px + var(--wallW) + var(--innerGap) + var(--safeR));
+
+  max-width: 980px;
+  margin: 0 auto;
+
+  /* Bookcase frame */
+  background: linear-gradient(180deg, var(--wood1), var(--wood2));
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow:
+    0 14px 40px rgba(0,0,0,.45),
+    inset 0 0 0 1px rgba(0,0,0,.35);
+
+  position: relative;
+  overflow: hidden;
+}
+
+#bookCountBadge{
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(255,255,255,.85);
+
+  padding: 4px 10px;
+  border-radius: 999px;
+
+  background: rgba(255,255,255,.10);
+  border: 1px solid rgba(255,255,255,.14);
+
+  line-height: 1.6;
+  user-select: none;
+}
+
+.wrap::before,
+.wrap::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--wallW);
+
+  z-index: 5;
+
+  background: linear-gradient(180deg, var(--wood3), var(--wood2));
+  box-shadow: inset 0 0 0 2px rgba(0,0,0,.22);
+  pointer-events: none;
+}
+
+.wrap::before {
+  left: 0;
+  border-right: 1px solid rgba(255,255,255,.08);
+}
+
+.wrap::after {
+  right: 0;
+  border-left: 1px solid rgba(255,255,255,.08);
+}
 
     /* Main grid */
-    .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap:12px; margin-top:6px; }
+.grid {
+  position: relative;
+  z-index: 1;
+
+  display: flex;
+  flex-wrap: wrap;           /* ✅ allows multiple shelves */
+  align-items: flex-end;
+
+  gap: 0;
+  row-gap: 22px;             /* ✅ space between shelves (tweak later) */
+
+  margin-top: 6px;
+  padding: 20px var(--innerGap) 20px var(--innerGap);
+
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.06);
+
+  position: relative;        /* ✅ needed for the wall */
+  overflow: hidden;          /* ✅ stops “infinite” look */
+
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0)),
+    repeating-linear-gradient(
+      180deg,
+      rgba(0,0,0,.28) 0px,
+      rgba(0,0,0,.28) 2px,
+      rgba(0,0,0,0) 2px,
+      rgba(0,0,0,0) 292px     /* ✅ shelf spacing (spine height + gap-ish) */
+    );
+}
 
     .book {
       border-radius:14px; padding:12px; min-height:168px; position:relative;
@@ -134,6 +193,7 @@
       cursor:pointer;
       touch-action: manipulation;
     }
+
     button.primary { background: rgba(255,255,255,.12); }
     button.danger { border-color: rgba(255,100,100,.35); }
     button.small { padding:7px 9px; font-size:12px; }
@@ -159,6 +219,20 @@
     input[type="number"]{ width: 120px; }
 
     .smallText { font-size:12px; color:var(--muted); margin-top:10px; line-height:1.4; }
+
+.textPreview {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 14px;
+  user-select: none;
+  line-height: 1;
+}
 
     /* Notes modal */
     .modalBg{
@@ -208,20 +282,592 @@
     .blocker h2 { margin:0 0 10px; font-size:18px; }
     .blocker p, .blocker li { color:#9aa3b2; line-height:1.45; }
     .blocker code { color:#e7eaf0; }
+
+/* =========================
+   Shelf-mode main books
+   ========================= */
+
+.book {
+  /* Override the big card look */
+  min-height: auto;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  overflow: visible;
+
+width: 50px;
+}
+
+.book .meta,
+.book .badge {
+  display: none !important; /* hide the whole card info/buttons */
+}
+
+/* The spine you see in the main area */
+.book .spine {
+  position: relative;
+  left: 0; top: 0; bottom: auto;
+  width: 50px;
+  height: 250px;
+  border-radius: 16px;
+  pointer-events: auto;
+}
+
+/* Bigger name on the spine */
+.book .spine span {
+  font-size: 13px;
+  letter-spacing: .7px;
+}
+
+/* Options gear button on the spine */
+.gearBtn {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -10px;
+  width: 40px;
+  height: 32px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.14);
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* Open-book button on the spine (top) */
+.openBtn {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: -10px;
+
+  width: 40px;
+  height: 32px;
+  border-radius: 12px;
+
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.14);
+  color: var(--text);
+
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 3;
+}
+
+/* Active book: pulled forward look */
+.book.active .spine {
+  transform: translateY(-10px) rotate(-2deg);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.22), 0 18px 36px rgba(0,0,0,.55);
+  outline: 2px solid rgba(255,255,255,.18);
+}
+
+/* When a book is active, leave an invisible gap in the shelf */
+.book.active {
+  visibility: hidden;      /* keeps the gap */
+  pointer-events: none;
+}
+
+/* Drag & Drop affordance */
+.book[draggable="true"] { cursor: grab; }
+.book.dragging { opacity: 0.35; cursor: grabbing; }
+.miniBook[draggable="true"] { cursor: grab; }
+.miniBook.dragging { opacity: 0.35; cursor: grabbing; }
+
+/* =========================
+   Top shelf (CUT row above ACTIVE row)
+   ========================= */
+
+#topShelf{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 6px 0;
+  padding: 0 0 0 0;
+}
+
+/* A row in the top shelf */
+.topRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* The main top book block (ACTIVE) */
+.topSpine{
+  width: 250px;
+  height: 50px;
+  border-radius: 14px;
+
+  cursor: pointer;
+  user-select: none;
+
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.18),
+    0 12px 24px rgba(0,0,0,.35);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  position: relative;   /* important: NOT absolute */
+  transform: none;
+}
+
+/* Text on top books */
+.topSpine span{
+  font-weight: 700;
+  letter-spacing: .6px;
+  font-size: 13px;
+  color: rgba(255,255,255,.92);
+  text-shadow: 0 1px 2px rgba(0,0,0,.35);
+}
+
+/* Cut book styling (same size, slightly different look) */
+.cutSpine{
+  opacity: 0.88;
+  filter: saturate(0.95);
+  border: 1px dashed rgba(255,255,255,.22);
+}
+
+/* Small label for cut */
+.cutTag {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  height: 32px;              /* match button height */
+  padding: 0 10px;           /* horizontal padding only */
+  display: flex;
+  align-items: center;
+
+  font-size: 11px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.35);
+  border: 1px solid rgba(255,255,255,.12);
+  color: rgba(255,255,255,.85);
+}
+
+/* Buttons beside top items */
+.topActions{
+  display: flex;
+  gap: 8px;
+}
+
+/* Gear button for the active book (sits to the right, not overlapping) */
+.topGearBtn {
+  position: absolute;
+  right: 14px;
+  top: 12px;
+
+  width: 40px;
+  height: 32px;
+  border-radius: 12px;
+
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.14);
+  color: var(--text);
+
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 4;
+}
+
+.topOpenBtn {
+  position: absolute;
+  right: 60px; /* sits left of gear */
+  top: 12px;
+
+  width: 40px;
+  height: 32px;
+  border-radius: 12px;
+
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.14);
+  color: var(--text);
+
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 4;
+}
+
+/* =========================
+   Book View (full-screen open book)
+   ========================= */
+
+/* Make each page able to "fill" vertically */
+.page{
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* FRONT page "turn" button lives at bottom */
+.frontNav{
+  margin-top: auto;
+  padding-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* NOTES page layout: toolbar + big textarea */
+.notesTopBar{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  margin-bottom: 10px;
+}
+
+.notesPager{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notesActionsTop{
+  display: flex;
+  gap: 8px;
+  margin-left: auto; /* pushes to the right when space allows */
+}
+
+/* Notes block should expand to fill the device */
+.notesBlock{
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+#pageNotesArea{
+  flex: 1;
+  min-height: 0;
+  resize: none; /* cleaner on mobile, fills space */
+}
+
+/* Mobile: show ONE page at a time based on data-view */
+@media (max-width: 780px){
+  .bookPages{ grid-template-columns: 1fr; }
+
+  .bookView[data-view="front"] #notesPage{ display: none; }
+  .bookView[data-view="notes"] #frontPage{ display: none; }
+}
+
+.bookViewBg{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+  display: none;
+  z-index: 80;
+
+  /* Mobile-safe padding + safe areas */
+  padding: 14px;
+  padding-left: calc(14px + var(--safeL));
+  padding-right: calc(14px + var(--safeR));
+}
+
+.bookView{
+  width: min(1100px, 100%);
+
+  /* ✅ Use dynamic viewport height so mobile browser bars don’t clip content */
+  height: calc(100dvh - 28px);
+
+  margin: 0 auto;
+  background: linear-gradient(180deg, rgba(23,26,33,.98), rgba(23,26,33,.92));
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.55);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.bookViewTop{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  padding: 12px 12px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.bookCrumbs{
+  font-size: 12px;
+  color: rgba(255,255,255,.75);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bookPages{
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+
+  /* ✅ This is the key: allow the page area to scroll */
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+
+.page{
+  padding: 14px;
+  position: relative;
+
+  /* space so text isn’t hidden behind sticky controls */
+  padding-bottom: 80px;
+}
+
+.leftPage{
+  border-right: 1px solid rgba(255,255,255,.08);
+  background: linear-gradient(180deg, rgba(58,36,23,.35), rgba(43,26,18,.25));
+}
+
+.rightPage{
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0));
+}
+
+.pageHeader{
+  font-weight: 800;
+  font-size: 13px;
+  margin-bottom: 10px;
+  color: rgba(255,255,255,.92);
+}
+
+.miniShelf{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  row-gap: 18px;
+  align-items: flex-end;
+  padding: 14px 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.08);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0)),
+    repeating-linear-gradient(
+      180deg,
+      rgba(0,0,0,.22) 0px,
+      rgba(0,0,0,.22) 2px,
+      rgba(0,0,0,0) 2px,
+      rgba(0,0,0,0) 292px
+    );
+  min-height: 320px;
+}
+
+.miniSpine{
+  width: 50px;
+  height: 250px;
+  border-radius: 16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), 0 12px 24px rgba(0,0,0,.25);
+  cursor: pointer;
+  user-select: none;
+}
+
+.miniSpine span{
+  writing-mode: vertical-rl;
+  font-weight: 700;
+  letter-spacing: .7px;
+  font-size: 13px;
+  color: rgba(255,255,255,.92);
+  text-shadow: 0 1px 2px rgba(0,0,0,.35);
+}
+
+/* Mini-shelf items behave like main shelf (open + gear + click-to-active) */
+.miniBook{
+  position: relative;
+  width: 50px;
+  height: 250px; /* match miniSpine height */
+}
+
+.miniBook .miniSpine{
+  width: 50px;
+  height: 250px;
+}
+
+/* Mini open button (top) */
+.miniOpenBtn{
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: -10px;
+
+  width: 40px;
+  height: 32px;
+  border-radius: 12px;
+
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.14);
+  color: var(--text);
+
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 3;
+}
+
+/* Mini gear button (bottom) */
+.miniGearBtn{
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -10px;
+
+  width: 40px;
+  height: 32px;
+  border-radius: 12px;
+
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.14);
+  color: var(--text);
+
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 3;
+}
+
+.miniAdd{
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+
+.bookTitle{
+  font-size: 18px;
+  font-weight: 900;
+  margin-bottom: 10px;
+}
+
+.settingsRow{
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: end;
+}
+
+.notesBlock{
+  margin-top: 14px;
+}
+
+.notesActions{
+  margin-top: 10px;
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  /* ✅ Keep Add/Delete reachable on mobile */
+  position: sticky;
+  bottom: 0;
+  padding: 10px 0;
+  background: linear-gradient(180deg, rgba(23,26,33,0), rgba(23,26,33,.92) 40%, rgba(23,26,33,.92));
+}
+
+.pageNav{
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+}
+
+.pageNum{
+  font-size: 12px;
+  color: rgba(255,255,255,.78);
+}
+
+/* Mobile: stack pages */
+@media (max-width: 780px){
+  .bookPages{ grid-template-columns: 1fr; }
+  .leftPage{ border-right: 0; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .miniShelf{ min-height: 220px; }
+}
+
+.bookCutBar{
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  display: none; /* only shows when something is cut */
+}
+
+.bookCutRow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap: wrap;
+}
+
+.bookCutPill{
+  flex: 1;
+  min-width: 220px;
+  height: 40px;
+  border-radius: 12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight: 800;
+  letter-spacing: .4px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), 0 10px 18px rgba(0,0,0,.25);
+}
+
+.bookCutActions{
+  display:flex;
+  gap:8px;
+}
+
   </style>
 </head>
 <body>
 <header>
-  <div class="titleRow">
-    <h1>Mind Library</h1>
-    <button type="button" class="small ghost" id="backBtn" title="Go up one level">⬅ Up</button>
+<div class="titleRow">
+  <div style="display:flex; align-items:center; gap:10px;">
+    <h1 style="margin:0;">Mind Library</h1>
+    <span id="bookCountBadge" title="Total books in library (including subfolders)">0</span>
   </div>
+
+  <button type="button" class="small ghost" id="backBtn" title="Go up one level">⬅ Up</button>
+</div>
   <div class="sub" id="activeLine">Active: (none)</div>
 
-  <div class="spineStrip" id="spineStrip"></div>
 </header>
 
 <div class="wrap">
+  <div id="topShelf"></div>
   <div class="grid" id="grid"></div>
 
   <div class="panel">
@@ -230,10 +876,29 @@
         <label>Add / create book in current folder</label>
         <input id="name" type="text" placeholder="e.g., Rest" />
       </div>
-      <div>
-        <label>Colour</label>
-        <input id="color" type="color" value="#6b7280" />
-      </div>
+<div>
+  <label>Colour</label>
+  <div style="display:flex; align-items:center; gap:10px;">
+    <input id="color" type="color" value="#6b7280" />
+    <div id="colorPreview" 
+         style="width:32px; height:32px; border-radius:8px; border:1px solid rgba(255,255,255,.2);">
+    </div>
+  </div>
+</div>
+<div>
+  <label>Text colour</label>
+  <div style="display:flex; align-items:center; gap:10px;">
+    <select id="textColor">
+      <option value="#000000">Black</option>
+      <option value="#333333">Dark grey</option>
+      <option value="#777777">Mid grey</option>
+      <option value="#cccccc">Light grey</option>
+      <option value="#ffffff" selected>White</option>
+    </select>
+
+    <div id="textColorPreview" class="textPreview">T</div>
+  </div>
+</div>
       <div>
         <button type="button" class="primary" id="addBtn">Add book</button>
       </div>
@@ -243,6 +908,10 @@
   <div><button type="button" id="exportBtn">Export backup</button></div>
   <div><button type="button" id="importBtn">Import backup</button></div>
   <input type="file" id="importFile" accept="application/json" style="display:none;">
+
+  <div><button type="button" id="exportBookBtn">Export active book</button></div>
+  <div><button type="button" id="importBookBtn">Import book here</button></div>
+  <input type="file" id="importBookFile" accept="application/json" style="display:none;">
 </div>
 
     <hr style="border:0;border-top:1px solid rgba(255,255,255,.08); margin:12px 0;">
@@ -279,19 +948,148 @@
   </div>
 </div>
 
+<!-- Book View (full-screen open book) -->
+<div class="bookViewBg" id="bookViewBg" aria-hidden="true">
+  <div class="bookView" role="dialog" aria-modal="true">
+
+    <div class="bookViewTop">
+      <div class="bookCrumbs" id="bookCrumbs"></div>
+
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button type="button" class="small" id="importBookIntoOpenBtn" title="Import a book into this open book">Import</button>
+        <input type="file" id="importBookIntoOpenFile" accept="application/json" style="display:none;">
+
+        <button type="button" class="small" id="backBookViewBtn" title="Go back one level">⬅ Back</button>
+        <button type="button" id="closeBookViewBtn">Close</button>
+      </div>
+    </div>
+
+    <div class="bookCutBar" id="bookCutBar"></div>
+
+    <div class="bookPages">
+      <!-- FRONT PAGE (Page 1) -->
+      <div class="page leftPage" id="frontPage">
+        <div class="pageHeader">Book</div>
+
+        <div class="titleBlock">
+          <div class="bookTitle" id="bookTitle"></div>
+
+          <div class="settingsRow">
+            <div>
+              <label>Rename</label>
+              <input id="renameInput" type="text" />
+            </div>
+
+            <div>
+              <label>Colour</label>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <input id="recolorInput" type="color" />
+                <div id="recolorPreview"
+                     style="width:32px; height:32px; border-radius:8px; border:1px solid rgba(255,255,255,.2);">
+                </div>
+              </div>
+            </div>
+
+            <div style="align-self:end;">
+              <button type="button" class="primary" id="saveBookSettingsBtn">Save</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label>Text colour</label>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <select id="reTextColor">
+              <option value="#000000">Black</option>
+              <option value="#333333">Dark grey</option>
+              <option value="#777777">Mid grey</option>
+              <option value="#cccccc">Light grey</option>
+              <option value="#ffffff" selected>White</option>
+            </select>
+            <div id="reTextPreview" class="textPreview">T</div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px;">
+          <div class="pageHeader">Subfolders</div>
+          <div class="miniShelf" id="miniShelf"></div>
+
+          <div class="miniAdd">
+            <div style="display:flex; gap:10px; align-items:end; flex-wrap:wrap;">
+              <div>
+                <label style="margin-bottom:6px; display:block;">New subfolder</label>
+                <input id="subName" type="text" placeholder="e.g., Emails" />
+              </div>
+
+              <div>
+                <label style="margin-bottom:6px; display:block;">Colour</label>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <input id="subColor" type="color" value="#6b7280" />
+                  <div id="subColorPreview"
+                       style="width:32px; height:32px; border-radius:8px; border:1px solid rgba(255,255,255,.2);">
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label style="margin-bottom:6px; display:block;">Text colour</label>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <select id="subTextColor">
+                    <option value="#000000">Black</option>
+                    <option value="#333333">Dark grey</option>
+                    <option value="#777777">Mid grey</option>
+                    <option value="#cccccc">Light grey</option>
+                    <option value="#ffffff" selected>White</option>
+                  </select>
+                  <div id="subTextPreview" class="textPreview">T</div>
+                </div>
+              </div>
+
+              <div>
+                <button type="button" class="primary" id="addSubBtn">Add</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile turn to notes -->
+        <div class="frontNav">
+          <button type="button" class="small" id="goNotesBtn">Turn page ⟶</button>
+        </div>
+      </div>
+
+      <!-- NOTES PAGE (Page 2+) -->
+      <div class="page rightPage" id="notesPage">
+        <div class="notesTopBar">
+          <button type="button" class="small" id="goFrontBtn">⟵ Front</button>
+
+          <div class="notesPager">
+            <button type="button" class="small" id="prevNotePageBtn">⟵</button>
+            <div class="pageNum" id="notePageNum">Page 1</div>
+            <button type="button" class="small" id="nextNotePageBtn">⟶</button>
+          </div>
+
+          <div class="notesActionsTop">
+            <button type="button" class="small" id="addPageBtn">Add page</button>
+            <button type="button" class="small danger" id="deletePageBtn">Delete</button>
+          </div>
+        </div>
+
+        <div class="notesBlock">
+          <label>Notes (this page)</label>
+          <textarea id="pageNotesArea" placeholder="- ..."></textarea>
+        </div>
+      </div>
+
+    </div> <!-- end .bookPages -->
+
+  </div> <!-- end .bookView -->
+</div> <!-- end .bookViewBg -->
+
 <script>
-  // ==========================================================
-  // VERSION / SAVE SLOT (EDIT THIS)
-  // Change this value to create a fresh “save file” per template
-  // Examples: "v1", "v2", "template_clean", "personal", etc.
-  // ==========================================================
   const SAVE_SLOT = "v1";
   const REMINDERS_ENABLED = false;
 
-  // ==========================================================
-  // Per-file + per-slot namespace so different templates don't
-  // accidentally share the same saved data.
-  // ==========================================================
   const FILE_ID = btoa(unescape(encodeURIComponent(location.href)))
     .replace(/=+/g, "").slice(0, 24);
   const NS = `ML_${FILE_ID}_${SAVE_SLOT}_`;
@@ -300,12 +1098,51 @@
   const LS_ACTIVE = NS + "active";
   const LS_REM    = NS + "reminder";
   const LS_PATH   = NS + "path";
+  const LS_CUT    = NS + "cut";
+
+  // ✅ Reset helper (for testing)
+  window.ML_RESET = function () {
+    localStorage.removeItem(LS_KEY);
+    localStorage.removeItem(LS_ACTIVE);
+    localStorage.removeItem(LS_REM);
+    localStorage.removeItem(LS_PATH);
+    alert("Reset complete. Reloading...");
+    location.reload();
+  };
 
   const grid = document.getElementById("grid");
-  const spineStrip = document.getElementById("spineStrip");
+  const topShelf = document.getElementById("topShelf");
   const activeLine = document.getElementById("activeLine");
+const bookCountBadge = document.getElementById("bookCountBadge");
   const nameEl = document.getElementById("name");
   const colorEl = document.getElementById("color");
+const colorPreview = document.getElementById("colorPreview");
+
+const textColorEl = document.getElementById("textColor");
+const textColorPreview = document.getElementById("textColorPreview");
+
+// Initialize preview on load
+function setTextPreview(previewEl, spineHex, textHex) {
+  if (!previewEl) return;
+  previewEl.style.background = spineHex;
+  previewEl.style.color = textHex;
+  previewEl.textContent = "T";
+}
+
+// Initialize previews on load
+colorPreview.style.background = colorEl.value;
+setTextPreview(textColorPreview, colorEl.value, (textColorEl && textColorEl.value) ? textColorEl.value : "#ffffff");
+
+// Update previews when user changes colour / text colour
+colorEl.addEventListener("input", () => {
+  colorPreview.style.background = colorEl.value;
+  setTextPreview(textColorPreview, colorEl.value, textColorEl.value);
+});
+
+textColorEl.addEventListener("change", () => {
+  setTextPreview(textColorPreview, colorEl.value, textColorEl.value);
+});
+
   const minsEl = document.getElementById("mins");
   const backBtn = document.getElementById("backBtn");
 
@@ -313,13 +1150,27 @@
   const importBtn = document.getElementById("importBtn");
   const importFile = document.getElementById("importFile");
 
+const exportBookBtn = document.getElementById("exportBookBtn");
+const importBookBtn = document.getElementById("importBookBtn");
+const importBookFile = document.getElementById("importBookFile");
+
   const modalBg = document.getElementById("modalBg");
   const modalTitle = document.getElementById("modalTitle");
   const notesArea = document.getElementById("notesArea");
   const closeModalBtn = document.getElementById("closeModalBtn");
 
+  // Hide reminders UI if disabled
+  const reminderRow = document.getElementById("reminderRow");
+  if (!REMINDERS_ENABLED && reminderRow) reminderRow.style.display = "none";
+
   let reminderTimer = null;
   let openNotesForId = null;
+  let dragBookId = null;
+  let bvDragBookId = null; // drag id for Book View mini-shelf
+
+// Book View state
+let bookViewStack = [];   // stack of bookIds (for nested book browsing)
+let notePageIndex = 0;    // current notes page index for the open book
 
   function storageOK() {
     try {
@@ -332,18 +1183,14 @@
     }
   }
 
-  // If iOS is opening in a restricted preview, localStorage often fails.
   if (!storageOK()) {
     document.body.innerHTML = `
       <div class="blocker">
         <h2>Mind Library can’t run properly here</h2>
-        <p>
-          This usually happens on iPad/iPhone when the file is opened in a preview viewer
-          (e.g., email attachment preview or Files “Quick Look”) instead of a normal browser page.
-        </p>
-        <p><b>Fix:</b> open the official GitHub Pages URL in Safari, then Share → <b>Add to Home Screen</b>.</p>
+        <p>This usually happens on iPad/iPhone when opened in a preview viewer.</p>
+        <p><b>Fix:</b> open via a normal browser page (Safari/Chrome) or GitHub Pages.</p>
         <p style="margin-top:14px;">
-          Technical note: saving requires <code>localStorage</code>, which is blocked in this viewer.
+          Technical note: saving requires <code>localStorage</code>, which is blocked here.
         </p>
       </div>
     `;
@@ -363,13 +1210,27 @@
     return val.toLowerCase();
   }
 
-  function mkBook(name, color) {
-    return { id: safeUUID(), name, color: normalizeHex(color), notes: "", children: [] };
-  }
+function normalizeTextHex(val) {
+  val = (val || "").trim();
+  if (!val) return "#ffffff";
+  if (!val.startsWith("#")) val = "#" + val;
+  if (!/^#([0-9a-fA-F]{6})$/.test(val)) return "#ffffff";
+  return val.toLowerCase();
+}
+
+function mkBook(name, color, textColor) {
+  return {
+    id: safeUUID(),
+    name,
+    color: normalizeHex(color),
+    textColor: normalizeTextHex(textColor),
+    notes: "",
+    children: []
+  };
+}
 
   function defaultState() {
-    // Only one neutral default for all users
-    return { roots: [ mkBook("Rest", "#6b7280") ] };
+    return { roots: [ mkBook("Rest", "#6b7280", "#ffffff") ] };
   }
 
   function escapeHtml(s) {
@@ -378,120 +1239,28 @@
     }[c]));
   }
 
-function loadState() {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
+  function saveState(state) {
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+  }
 
-      // Safety: if data is missing or corrupted, restore default Rest book
-      if (!parsed || !Array.isArray(parsed.roots) || parsed.roots.length === 0) {
-        const st = defaultState();
-        saveState(st);
-        return st;
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.roots) && parsed.roots.length) return parsed;
       }
-
-      return parsed;
-    }
-  } catch {}
-
-  // First run: create default state ONCE and save it,
-  // so the "Rest" book keeps the same ID.
-  const st = defaultState();
-  saveState(st);
-  return st;
-}
-  function saveState(state) { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
-
-function buildBackupObject() {
-  return {
-    meta: {
-      app: "Mind Library",
-      saveSlot: SAVE_SLOT,
-      createdAt: new Date().toISOString(),
-    },
-    data: {
-      state: loadState(),
-      activeId: getActiveId(),
-      path: getPath(),
-      reminderMins: localStorage.getItem(LS_REM) || "0",
-    }
-  };
-}
-
-function downloadJson(filename, obj) {
-  const json = JSON.stringify(obj, null, 2);
-  const blob = new Blob([json], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-
-  URL.revokeObjectURL(url);
-}
-
-exportBtn.addEventListener("click", () => {
-  try {
-    const backup = buildBackupObject();
-    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-    downloadJson(`mind-library-backup-${SAVE_SLOT}-${stamp}.json`, backup);
-  } catch (e) {
-    alert("Export failed. See console.");
-    console.error(e);
+    } catch {}
+    const st = defaultState();
+    saveState(st);
+    return st;
   }
-});
-
-importBtn.addEventListener("click", () => {
-  importFile.value = ""; // allow importing same file twice
-  importFile.click();
-});
-
-importFile.addEventListener("change", async () => {
-  const file = importFile.files && importFile.files[0];
-  if (!file) return;
-
-  try {
-    const text = await file.text();
-    const backup = JSON.parse(text);
-
-    // Basic validation
-    if (!backup || !backup.data || !backup.data.state) {
-      alert("That file doesn't look like a Mind Library backup.");
-      return;
-    }
-
-    const ok = confirm(
-      "Importing will overwrite your current library in this SAVE_SLOT.\n\nProceed?"
-    );
-    if (!ok) return;
-
-    // Restore
-    saveState(backup.data.state);
-    setActiveId(backup.data.activeId || "");
-    setPath(Array.isArray(backup.data.path) ? backup.data.path : []);
-    localStorage.setItem(LS_REM, String(backup.data.reminderMins || "0"));
-
-    // Apply reminder UI/state
-    const savedMins = parseInt(localStorage.getItem(LS_REM) || "0", 10);
-    minsEl.value = String(savedMins);
-
-    stopReminder();
-    render();
-    if (savedMins && REMINDERS_ENABLED) startReminder(savedMins);
-
-    alert("Import complete.");
-  } catch (e) {
-    alert("Import failed. Make sure you selected a valid JSON backup.");
-    console.error(e);
-  }
-});
 
   function getActiveId() { return localStorage.getItem(LS_ACTIVE) || ""; }
   function setActiveId(id) { localStorage.setItem(LS_ACTIVE, id || ""); }
+
+  function getCutId() { return localStorage.getItem(LS_CUT) || ""; }
+  function setCutId(id) { localStorage.setItem(LS_CUT, id || ""); }
 
   function getPath() {
     try { return JSON.parse(localStorage.getItem(LS_PATH) || "[]"); }
@@ -507,6 +1276,56 @@ importFile.addEventListener("change", async () => {
     }
     return null;
   }
+
+function countAllBooks(list) {
+  let total = 0;
+  for (const b of (list || [])) {
+    total += 1;
+    total += countAllBooks(b.children || []);
+  }
+  return total;
+}
+
+function ensurePages(book) {
+  // Migration: if pages doesn't exist, create it from existing notes
+  if (!book) return;
+
+  if (!Array.isArray(book.pages)) {
+    const old = (book.notes || "").toString();
+    book.pages = [old];          // page 1 = old notes
+  }
+
+  // Keep legacy "notes" in sync (so nothing is ever lost)
+  if (book.pages.length) {
+    book.notes = book.pages[0] ?? "";
+  }
+}
+
+function getCurrentBookFromStack(state) {
+  if (!bookViewStack.length) return null;
+  return findBookById(state.roots, bookViewStack[bookViewStack.length - 1]);
+}
+
+function findParentAndIndex(list, id) {
+  for (let i = 0; i < list.length; i++) {
+    const b = list[i];
+    if (b.id === id) return { parentList: list, index: i, item: b };
+    const children = b.children || [];
+    const found = findParentAndIndex(children, id);
+    if (found) return found;
+  }
+  return null;
+}
+
+function containsId(rootBook, searchId) {
+  if (!rootBook) return false;
+  if (rootBook.id === searchId) return true;
+  const kids = rootBook.children || [];
+  for (const k of kids) {
+    if (containsId(k, searchId)) return true;
+  }
+  return false;
+}
 
   function getFolderList(state, pathArr) {
     let current = state.roots;
@@ -568,8 +1387,210 @@ importFile.addEventListener("change", async () => {
     saveState(state);
   });
 
+  function buildBackupObject() {
+    return {
+      meta: { app: "Mind Library", saveSlot: SAVE_SLOT, createdAt: new Date().toISOString() },
+      data: {
+        state: loadState(),
+        activeId: getActiveId(),
+        path: getPath(),
+        reminderMins: localStorage.getItem(LS_REM) || "0",
+      }
+    };
+  }
+
+  function downloadJson(filename, obj) {
+    const json = JSON.stringify(obj, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    URL.revokeObjectURL(url);
+  }
+
+function deepClone(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
+function sanitizeImportedBook(raw) {
+  const book = (raw && raw.book) ? raw.book : raw;
+  if (!book || typeof book !== "object") return null;
+
+  const clean = {
+    id: book.id || safeUUID(),
+    name: (book.name || "Imported Book").toString(),
+    color: normalizeHex(book.color || "#6b7280"),
+    textColor: normalizeTextHex(book.textColor || "#ffffff"),
+    notes: (book.notes || "").toString(),
+    children: Array.isArray(book.children) ? book.children : [],
+  };
+
+  if (Array.isArray(book.pages)) {
+    clean.pages = book.pages.map(x => (x ?? "").toString());
+  } else {
+    clean.pages = [clean.notes];
+  }
+
+  clean.notes = clean.pages[0] ?? "";
+
+  clean.children = clean.children
+    .map(child => sanitizeImportedBook(child))
+    .filter(Boolean);
+
+  return clean;
+}
+
+function reIdBookTree(book) {
+  book.id = safeUUID();
+  if (Array.isArray(book.children)) {
+    for (const c of book.children) reIdBookTree(c);
+  }
+}
+
+function exportSingleBook(book) {
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const safeName = (book.name || "book")
+    .toString()
+    .replace(/[^\w\- ]+/g, "")
+    .trim()
+    .replace(/\s+/g, "-");
+
+  const payload = {
+    meta: {
+      app: "Mind Library",
+      type: "single-book",
+      version: 1,
+      exportedAt: new Date().toISOString()
+    },
+    book: deepClone(book)
+  };
+
+  downloadJson(
+    `mind-library-book-${safeName || "book"}-${stamp}.json`,
+    payload
+  );
+}
+
+  exportBtn.addEventListener("click", () => {
+    const backup = buildBackupObject();
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+    downloadJson(`mind-library-backup-${SAVE_SLOT}-${stamp}.json`, backup);
+  });
+
+exportBookBtn.addEventListener("click", () => {
+  const activeId = getActiveId();
+  if (!activeId) {
+    alert("No active book selected.\n\nClick a book to make it Active, then try again.");
+    return;
+  }
+
+  const state = loadState();
+  const book = findBookById(state.roots, activeId);
+  if (!book) {
+    alert("Active book not found.");
+    return;
+  }
+
+  ensurePages(book);
+  saveState(state);
+
+  exportSingleBook(book);
+});
+
+  importBtn.addEventListener("click", () => {
+    importFile.value = "";
+    importFile.click();
+  });
+
+importBookBtn.addEventListener("click", () => {
+  importBookFile.value = "";
+  importBookFile.click();
+});
+
+  importFile.addEventListener("change", async () => {
+    const file = importFile.files && importFile.files[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const backup = JSON.parse(text);
+
+      if (!backup || !backup.data || !backup.data.state) {
+        alert("That file doesn't look like a Mind Library backup.");
+        return;
+      }
+
+      const ok = confirm("Importing will overwrite your current library in this SAVE_SLOT.\n\nProceed?");
+      if (!ok) return;
+
+      saveState(backup.data.state);
+      setActiveId(backup.data.activeId || "");
+      setPath(Array.isArray(backup.data.path) ? backup.data.path : []);
+      localStorage.setItem(LS_REM, String(backup.data.reminderMins || "0"));
+
+      alert("Import complete.");
+      render();
+    } catch (e) {
+      alert("Import failed. Make sure you selected a valid JSON backup.");
+      console.error(e);
+    }
+  });
+
+importBookFile.addEventListener("change", async () => {
+  const file = importBookFile.files && importBookFile.files[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const raw = JSON.parse(text);
+
+    // 1) Sanitize payload into a clean book tree
+    const clean = sanitizeImportedBook(raw);
+    if (!clean) {
+      alert("That file doesn't look like a valid exported book.");
+      return;
+    }
+
+    // 2) Re-ID the entire imported tree so it can’t collide with existing IDs
+    reIdBookTree(clean);
+
+    // 3) Ensure notes pages exist (compat)
+    ensurePages(clean);
+
+    // 4) Insert into CURRENT folder (where you are right now)
+    const state = loadState();
+    const pathArr = getPath();
+    const folderList = getFolderList(state, pathArr);
+
+    folderList.push(clean);
+    saveState(state);
+
+    alert(`Book imported into this folder:\n\n${clean.name}`);
+    render();
+
+    // If Book View is open, refresh it too
+    if (bookViewBg && bookViewBg.style.display === "block") {
+      renderBookView();
+    }
+
+  } catch (e) {
+    alert("Import failed. Make sure you selected a valid exported-book JSON file.");
+    console.error(e);
+  }
+});
+
   function render() {
     const state = loadState();
+// Total books (including all subfolders)
+if (bookCountBadge) {
+  bookCountBadge.textContent = String(countAllBooks(state.roots));
+}
     const activeId = getActiveId();
     const pathArr = getPath();
 
@@ -578,72 +1599,93 @@ importFile.addEventListener("change", async () => {
     backBtn.style.visibility = pathArr.length ? "visible" : "hidden";
 
     const activeBook = activeId ? findBookById(state.roots, activeId) : null;
+// Show the active book on the top shelf
+const cutId = getCutId();
+const cutBook = cutId ? findBookById(state.roots, cutId) : null;
+
+let html = "";
+
+// CUT ROW (stacked above)
+if (cutBook) {
+  html += `
+    <div class="topRow">
+      <div class="cutTag">CUT</div>
+      <div class="topSpine cutSpine" style="background:${cutBook.color}" data-act="cutPick">
+        <span style="color:${cutBook.textColor || "#ffffff"}">${escapeHtml(cutBook.name)}</span>
+      </div>
+      <div class="topActions">
+        <button type="button" class="small" data-act="pasteCut">Paste here</button>
+        <button type="button" class="small danger" data-act="cancelCut">Cancel</button>
+      </div>
+    </div>
+  `;
+}
+
+// ACTIVE ROW (below cut)
+if (activeBook) {
+  html += `
+    <div class="topRow">
+      <div class="topSpine" style="background:${activeBook.color}" data-act="topActive">
+        <span style="color:${activeBook.textColor || "#ffffff"}">${escapeHtml(activeBook.name)}</span>
+      </div>
+
+      <button type="button" class="topOpenBtn" data-act="topOpen" title="Open book">📖</button>
+      <button type="button" class="topGearBtn" data-act="topGear" title="Options">⚙️</button>
+    </div>
+  `;
+}
+
+topShelf.innerHTML = html;
+
+    // ✅ Hide “Folder: (root)” completely when at root
     activeLine.textContent =
       "Active: " + (activeBook ? activeBook.name : "(none)") +
       (crumbs.length ? `  •  Folder: ${crumbs.join(" › ")}` : "");
 
-    // Top strip spines
-    spineStrip.innerHTML = "";
-    folderList.forEach(book => {
-      const pill = document.createElement("div");
-      pill.className = "spinePill" + (book.id === activeId ? " active" : "");
-      pill.style.background = book.color;
-      pill.dataset.bookId = book.id;
-      pill.innerHTML = `<span>${escapeHtml(book.name)}</span><div class="miniTag">ACTIVE</div>`;
-      spineStrip.appendChild(pill);
-    });
-
-    // Main grid
+    // Main grid shelf spines
     grid.innerHTML = "";
-    folderList.forEach(book => {
-      const hasNotes = (book.notes || "").trim().length > 0;
-
+    folderList.forEach((book, i) => {
       const card = document.createElement("div");
       card.className = "book" + (book.id === activeId ? " active" : "");
       card.dataset.bookId = book.id;
 
-      card.innerHTML = `
-        <div class="spine" style="background:${book.color}">
-          <span>${escapeHtml(book.name)}</span>
-        </div>
-        <div class="meta">
-          <div class="name">${escapeHtml(book.name)}</div>
-          <div class="hex">${book.color.toUpperCase()}</div>
-          <div class="path">Subsections: ${book.children?.length || 0} • Notes: ${hasNotes ? "Yes" : "No"}</div>
+card.dataset.idx = String(i);
 
-          <div class="btnRow">
-            <button type="button" class="small primary" data-act="active">Set active</button>
-            <button type="button" class="small" data-act="enter">Subfolder</button>
-            <button type="button" class="small" data-act="notes">Notes</button>
-            <button type="button" class="small" data-act="edit">Edit</button>
-            <button type="button" class="small danger" data-act="delete">Delete</button>
-          </div>
+// Drag & drop (disabled for the active book)
+if (book.id !== activeId) {
+  card.draggable = true;
 
-          <div class="btnRow" style="margin-top:8px;">
-            <button type="button" class="small" data-act="up">⬆ Move</button>
-            <button type="button" class="small" data-act="down">⬇ Move</button>
-          </div>
-        </div>
-        <div class="badge">ACTIVE</div>
-      `;
+  card.addEventListener("dragstart", (e) => {
+    dragBookId = book.id;
+    card.classList.add("dragging");
+    e.dataTransfer.effectAllowed = "move";
+  });
+
+  card.addEventListener("dragend", () => {
+    dragBookId = null;
+    card.classList.remove("dragging");
+  });
+} else {
+  card.draggable = false;
+}
+
+card.innerHTML = `
+  <div class="spine" style="background:${book.color}">
+    <button type="button" class="openBtn" data-act="open" title="Open book">📖</button>
+    <span style="color:${book.textColor || "#ffffff"}">${escapeHtml(book.name)}</span>
+  </div>
+  <button type="button" class="gearBtn" data-act="gear" title="Options">⚙️</button>
+`;
       grid.appendChild(card);
     });
   }
 
-  // Event delegation
-  spineStrip.addEventListener("click", (e) => {
-    const pill = e.target.closest(".spinePill");
-    if (!pill) return;
-    setActiveId(pill.dataset.bookId);
-    render();
-  });
-
+  // Clicking in main shelf:
+  // - gear button opens menu
+  // - anywhere else sets active
   grid.addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-act]");
-    if (!btn) return;
-
-    const act = btn.dataset.act;
-    const card = btn.closest(".book");
+    const card = e.target.closest(".book");
     if (!card) return;
 
     const bookId = card.dataset.bookId;
@@ -656,55 +1698,89 @@ importFile.addEventListener("change", async () => {
 
     const b = listRef[idx];
 
-    if (act === "active") {
-      setActiveId(bookId);
-      render();
-      return;
-    }
-    if (act === "enter") {
-      setPath([...pathArr, bookId]);
-      render();
-      return;
-    }
-    if (act === "notes") {
-      openNotes(bookId);
-      return;
-    }
-    if (act === "edit") {
-      const newName = prompt("New name:", b.name);
-      if (newName === null) return;
+// Open Book View (📖) without setting active
+if (btn && btn.dataset.act === "open") {
+  openBookView(bookId);
+  return;
+}
 
-      const newColor = prompt("New hex colour (e.g. #6b7280):", b.color);
-      if (newColor === null) return;
+    if (btn && btn.dataset.act === "gear") {
+const choice = prompt(
+  `Options for "${b.name}":\n\n` +
+  `1 = Delete\n` +
+  `2 = Move up\n` +
+  `3 = Move down\n` +
+  `4 = Cut / Move\n\n` +
+  `Type a number and press OK.`
+);
 
-      b.name = (newName.trim() || b.name);
-      b.color = normalizeHex(newColor);
-      saveState(state);
-      render();
+      if (!choice) return;
+
+if (choice === "1") {
+  const ok = confirm(`Delete "${b.name}"? (Subsections and notes will also be removed)`);
+  if (!ok) return;
+  listRef.splice(idx, 1);
+  if (getActiveId() === bookId) setActiveId("");
+  saveState(state);
+  render();
+  return;
+}
+
+if (choice === "2") { moveItem(listRef, idx, idx - 1); saveState(state); render(); return; }
+if (choice === "3") { moveItem(listRef, idx, idx + 1); saveState(state); render(); return; }
+
+if (choice === "4") {
+  setCutId(bookId);
+  if (getActiveId() === bookId) setActiveId("");
+  render();
+  return;
+}
+
       return;
     }
-    if (act === "delete") {
-      const ok = confirm(`Delete "${b.name}"? (Subsections and notes will also be removed)`);
-      if (!ok) return;
-      listRef.splice(idx, 1);
-      if (getActiveId() === bookId) setActiveId("");
-      saveState(state);
-      render();
-      return;
-    }
-    if (act === "up") {
-      moveItem(listRef, idx, idx - 1);
-      saveState(state);
-      render();
-      return;
-    }
-    if (act === "down") {
-      moveItem(listRef, idx, idx + 1);
-      saveState(state);
-      render();
-      return;
-    }
+
+    setActiveId(bookId);
+    render();
   });
+
+// =========================
+// Drag & Drop reorder logic
+// =========================
+grid.addEventListener("dragover", (e) => {
+  e.preventDefault(); // required to allow dropping
+});
+
+grid.addEventListener("drop", (e) => {
+  e.preventDefault();
+
+  if (!dragBookId) return;
+
+  const state = loadState();
+  const pathArr = getPath();
+  const listRef = getFolderList(state, pathArr);
+
+  const fromIdx = listRef.findIndex(x => x.id === dragBookId);
+  if (fromIdx < 0) return;
+
+  // Drop target (may be null if dropped on empty shelf space)
+  const targetCard = e.target.closest(".book");
+  const targetId = targetCard ? targetCard.dataset.bookId : null;
+
+  let toIdx = targetId ? listRef.findIndex(x => x.id === targetId) : -1;
+
+  // If dropped on empty area, send to end
+  if (toIdx < 0) toIdx = listRef.length - 1;
+
+  // If same position, do nothing
+  if (toIdx === fromIdx) return;
+
+  // Reorder
+  const [moved] = listRef.splice(fromIdx, 1);
+  listRef.splice(toIdx, 0, moved);
+
+  saveState(state);
+  render();
+});
 
   backBtn.addEventListener("click", () => {
     const pathArr = getPath();
@@ -723,7 +1799,7 @@ importFile.addEventListener("change", async () => {
     if (!nm) return alert("Give the book a name.");
     const col = colorEl.value || "#6b7280";
 
-    folderList.push(mkBook(nm, col));
+    folderList.push(mkBook(nm, col, textColorEl.value));
     saveState(state);
     nameEl.value = "";
     render();
@@ -734,63 +1810,875 @@ importFile.addEventListener("change", async () => {
     render();
   });
 
-  // Reminders
-  document.getElementById("enableNotiBtn").addEventListener("click", async () => {
-    if (!("Notification" in window)) return alert("Notifications not supported here.");
-    const perm = await Notification.requestPermission();
-    alert("Notification permission: " + perm);
-  });
+  // Reminders remain in code but disabled in browser version
+  if (REMINDERS_ENABLED) {
+    document.getElementById("enableNotiBtn").addEventListener("click", async () => {
+      if (!("Notification" in window)) return alert("Notifications not supported here.");
+      const perm = await Notification.requestPermission();
+      alert("Notification permission: " + perm);
+    });
 
-document.getElementById("startReminderBtn").addEventListener("click", () => {
-  const mins = Math.max(0, parseInt(minsEl.value || "0", 10));
+    document.getElementById("startReminderBtn").addEventListener("click", () => {
+      const mins = Math.max(0, parseInt(minsEl.value || "0", 10));
+      localStorage.setItem(LS_REM, String(mins));
+      startReminder(mins);
+    });
 
-  // If no active book is set, the reminder has nothing to remind you about.
-  if (!getActiveId()) {
-    alert("Set an active book first (press 'Set active' on a book), then start the reminder.");
+    document.getElementById("stopReminderBtn").addEventListener("click", () => stopReminder());
+
+    function startReminder(mins) {
+      stopReminder();
+      if (!mins) return;
+
+      reminderTimer = setInterval(() => {
+        const state = loadState();
+        const activeId = getActiveId();
+        const active = activeId ? findBookById(state.roots, activeId) : null;
+        if (!active) return;
+
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification("Mode reminder", { body: `You are in: ${active.name}` });
+        } else {
+          console.log("Mode reminder:", active.name);
+        }
+      }, mins * 60 * 1000);
+    }
+
+    function stopReminder() {
+      if (reminderTimer) clearInterval(reminderTimer);
+      reminderTimer = null;
+    }
+  }
+
+topShelf.addEventListener("click", (e) => {
+  const act = e.target.closest("[data-act]")?.dataset.act;
+  if (!act) return;
+
+  // Top shelf gear menu (active book)
+  if (act === "topGear") {
+    const activeId = getActiveId();
+    if (!activeId) return;
+
+    const state = loadState();
+    const pathArr = getPath();
+    const listRef = getFolderList(state, pathArr);
+    const idx = listRef.findIndex(x => x.id === activeId);
+    if (idx < 0) return alert("Active book is not in this folder.");
+
+    const b = listRef[idx];
+
+    const choice = prompt(
+      `Options for "${b.name}":\n\n` +
+      `1 = Delete\n` +
+      `2 = Move up\n` +
+      `3 = Move down\n\n` +
+      `Type a number and press OK.`
+    );
+
+    if (!choice) return;
+
+    if (choice === "1") {
+      const ok = confirm(`Delete "${b.name}"? (Subsections and notes will also be removed)`);
+      if (!ok) return;
+      listRef.splice(idx, 1);
+      setActiveId("");
+      saveState(state);
+      render();
+      return;
+    }
+
+    if (choice === "2") { moveItem(listRef, idx, idx - 1); saveState(state); render(); return; }
+    if (choice === "3") { moveItem(listRef, idx, idx + 1); saveState(state); render(); return; }
+
     return;
   }
 
-  localStorage.setItem(LS_REM, String(mins));
-  startReminder(mins);
+  const state = loadState();
+  const pathArr = getPath();
+  const targetList = getFolderList(state, pathArr);
+
+  if (act === "cancelCut") {
+    setCutId("");
+    render();
+    return;
+  }
+
+  if (act === "pasteCut") {
+    const cutId = getCutId();
+    if (!cutId) return;
+
+    const found = findParentAndIndex(state.roots, cutId);
+    if (!found) {
+      setCutId("");
+      render();
+      return;
+    }
+
+    const moving = found.item;
+
+    // Safety: prevent pasting a book into itself or its own descendants
+    // (This happens if the target folder is inside the moving book)
+    const currentFolderId = pathArr.length ? pathArr[pathArr.length - 1] : "";
+    if (currentFolderId && containsId(moving, currentFolderId)) {
+      alert("You can’t paste a book into itself (or one of its own subfolders).");
+      return;
+    }
+
+    // Remove from old parent
+    found.parentList.splice(found.index, 1);
+
+    // Paste into current folder
+    targetList.push(moving);
+
+    // Clear cut
+    setCutId("");
+
+    saveState(state);
+    render();
+    return;
+  }
+
+  // Optional: clicking active book on top toggles it off
+if (act === "topOpen") {
+  const activeId = getActiveId();
+  if (!activeId) return;
+  openBookView(activeId);
+  return;
+}  
+if (act === "topActive") {
+    setActiveId("");
+    render();
+    return;
+  }
 });
 
-  document.getElementById("stopReminderBtn").addEventListener("click", () => stopReminder());
+// ---------- Book View DOM ----------
+const bookViewBg = document.getElementById("bookViewBg");
+const bookView = bookViewBg.querySelector(".bookView");
+const closeBookViewBtn = document.getElementById("closeBookViewBtn");
+const bookCrumbs = document.getElementById("bookCrumbs");
+const miniShelf = document.getElementById("miniShelf");
+const backBookViewBtn = document.getElementById("backBookViewBtn");
 
-  function startReminder(mins) {
-    stopReminder();
-    if (!mins) return;
+const importBookIntoOpenBtn = document.getElementById("importBookIntoOpenBtn");
+const importBookIntoOpenFile = document.getElementById("importBookIntoOpenFile");
 
-    reminderTimer = setInterval(() => {
-      const state = loadState();
-      const activeId = getActiveId();
-      const active = activeId ? findBookById(state.roots, activeId) : null;
-      if (!active) return;
+importBookIntoOpenFile.addEventListener("change", async () => {
+  const file = importBookIntoOpenFile.files && importBookIntoOpenFile.files[0];
+  if (!file) return;
 
-      if ("Notification" in window && Notification.permission === "granted") {
-        new Notification("Mode reminder", { body: `You are in: ${active.name}` });
-      } else {
-        console.log("Mode reminder:", active.name);
-      }
-    }, mins * 60 * 1000);
+  try {
+    const text = await file.text();
+    const raw = JSON.parse(text);
+
+    const clean = sanitizeImportedBook(raw);
+    if (!clean) {
+      alert("That file doesn't look like a valid exported book.");
+      return;
+    }
+
+    reIdBookTree(clean);
+    ensurePages(clean);
+
+    const state = loadState();
+    const current = getCurrentBookFromStack(state);
+    if (!current) {
+      alert("No open book found to import into.");
+      return;
+    }
+
+    current.children = current.children || [];
+    current.children.push(clean);
+
+    saveState(state);
+
+    alert(`Book imported into:\n\n${current.name}`);
+    render();
+    renderBookView();
+
+  } catch (e) {
+    alert("Import failed. Make sure you selected a valid exported-book JSON file.");
+    console.error(e);
+  }
+});
+
+importBookIntoOpenBtn.addEventListener("click", () => {
+  importBookIntoOpenFile.value = "";
+  importBookIntoOpenFile.click();
+});
+const bookCutBar = document.getElementById("bookCutBar");
+
+bookCutBar.addEventListener("click", (e) => {
+  const act = e.target.closest("[data-act]")?.dataset.act;
+  if (!act) return;
+
+  const state = loadState();
+  const current = getCurrentBookFromStack(state);
+  if (!current) return;
+
+  if (act === "cancelCutBV") {
+    setCutId("");
+    render();
+    renderBookView();
+    return;
   }
 
-  function stopReminder() {
-    if (reminderTimer) clearInterval(reminderTimer);
-    reminderTimer = null;
+  if (act === "pasteCutBV") {
+    const cutId = getCutId();
+    if (!cutId) return;
+
+    const found = findParentAndIndex(state.roots, cutId);
+    if (!found) {
+      setCutId("");
+      render();
+      renderBookView();
+      return;
+    }
+
+    const moving = found.item;
+
+    // Safety: prevent pasting into itself / descendants
+    if (containsId(moving, current.id)) {
+      alert("You can’t paste a book into itself (or one of its own subfolders).");
+      return;
+    }
+
+    // Remove from old parent
+    found.parentList.splice(found.index, 1);
+
+    // Paste into this open book's children
+    current.children = current.children || [];
+    current.children.push(moving);
+
+    // Clear cut + save
+    setCutId("");
+    saveState(state);
+    render();
+    renderBookView();
   }
+});
 
-  // restore reminder
-  const savedMins = parseInt(localStorage.getItem(LS_REM) || "0", 10);
-  minsEl.value = String(savedMins);
+const subName = document.getElementById("subName");
+const subColor = document.getElementById("subColor");
+const addSubBtn = document.getElementById("addSubBtn");
+const subTextColor = document.getElementById("subTextColor");
+const subTextPreview = document.getElementById("subTextPreview");
 
-  render();
+// Init subfolder text preview
+setTextPreview(subTextPreview, subColor.value, subTextColor.value);
 
-const reminderRow = document.getElementById("reminderRow");
-if (!REMINDERS_ENABLED && reminderRow) {
-  reminderRow.style.display = "none";
+// Live update subfolder preview
+subColor.addEventListener("input", () => {
+  setTextPreview(subTextPreview, subColor.value, subTextColor.value);
+});
+subTextColor.addEventListener("change", () => {
+  setTextPreview(subTextPreview, subColor.value, subTextColor.value);
+});
+
+const subColorPreview = document.getElementById("subColorPreview");
+
+// Init preview (safe even if element missing)
+if (subColorPreview && subColor) {
+  subColorPreview.style.background = subColor.value;
+
+  subColor.addEventListener("input", () => {
+    subColorPreview.style.background = subColor.value;
+  });
 }
 
-  if (savedMins && REMINDERS_ENABLED) startReminder(savedMins);
+const bookTitle = document.getElementById("bookTitle");
+const renameInput = document.getElementById("renameInput");
+const recolorInput = document.getElementById("recolorInput");
+const saveBookSettingsBtn = document.getElementById("saveBookSettingsBtn");
+const reTextColor = document.getElementById("reTextColor");
+const reTextPreview = document.getElementById("reTextPreview");
+
+function updateReTextPreview() {
+  setTextPreview(
+    reTextPreview,
+    (recolorInput && recolorInput.value) ? recolorInput.value : "#6b7280",
+    (reTextColor && reTextColor.value) ? reTextColor.value : "#ffffff"
+  );
+}
+
+if (recolorInput) recolorInput.addEventListener("input", updateReTextPreview);
+if (reTextColor) reTextColor.addEventListener("change", updateReTextPreview);
+
+const recolorPreview = document.getElementById("recolorPreview");
+
+// Live preview when user changes colour in Book View
+if (recolorPreview && recolorInput) {
+  recolorPreview.style.background = recolorInput.value || "#6b7280";
+
+  recolorInput.addEventListener("input", () => {
+    recolorPreview.style.background = recolorInput.value;
+  });
+}
+
+const pageNotesArea = document.getElementById("pageNotesArea");
+const notePageNum = document.getElementById("notePageNum");
+const prevNotePageBtn = document.getElementById("prevNotePageBtn");
+const nextNotePageBtn = document.getElementById("nextNotePageBtn");
+const addPageBtn = document.getElementById("addPageBtn");
+const deletePageBtn = document.getElementById("deletePageBtn");
+const goNotesBtn = document.getElementById("goNotesBtn");
+const goFrontBtn = document.getElementById("goFrontBtn");
+
+// =========================
+// Mini-shelf interactions
+// =========================
+miniShelf.addEventListener("click", (e) => {
+  const wrap = e.target.closest(".miniBook");
+  if (!wrap) return;
+
+  const childId = wrap.dataset.bookId;
+  if (!childId) return;
+
+  const act = e.target.closest("button[data-act]")?.dataset.act || "";
+
+  const state = loadState();
+  const current = getCurrentBookFromStack(state);
+  if (!current) return;
+
+  current.children = current.children || [];
+  const idx = current.children.findIndex(x => x.id === childId);
+  if (idx < 0) return;
+
+  const child = current.children[idx];
+
+  // Helper: open child inside Book View (drill down)
+  function openChild() {
+    bookViewStack.push(childId);
+    notePageIndex = 0;
+    setBookViewMode("front");
+    renderBookView();
+  }
+
+  // Mini open button 📖
+  if (act === "miniOpen") {
+    openChild();
+    return;
+  }
+
+// Mini gear ⚙️ (match main shelf exactly)
+if (act === "miniGear") {
+  const choice = prompt(
+    `Options for "${child.name}":\n\n` +
+    `1 = Delete\n` +
+    `2 = Move up\n` +
+    `3 = Move down\n` +
+    `4 = Cut / Move\n\n` +
+    `Type a number and press OK.`
+  );
+
+  if (!choice) return;
+
+  if (choice === "1") {
+    const ok = confirm(`Delete "${child.name}"? (Subsections and notes will also be removed)`);
+    if (!ok) return;
+
+    // If this (or something inside it) is active, clear active
+    const activeId = getActiveId();
+    const activeBook = activeId ? findBookById(state.roots, activeId) : null;
+    if (activeBook && containsId(child, activeId)) setActiveId("");
+
+    // If this is currently cut, clear cut
+    if (getCutId() === childId) setCutId("");
+
+    // Remove child
+    current.children.splice(idx, 1);
+
+    saveState(state);
+    render();
+    renderBookView();
+    return;
+  }
+
+  if (choice === "2") { moveItem(current.children, idx, idx - 1); saveState(state); render(); renderBookView(); return; }
+  if (choice === "3") { moveItem(current.children, idx, idx + 1); saveState(state); render(); renderBookView(); return; }
+
+  if (choice === "4") {
+    setCutId(childId);
+    if (getActiveId() === childId) setActiveId("");
+    saveState(state);
+    render();
+    renderBookView();
+    return;
+  }
+
+  return;
+}
+
+// Click anywhere else on the mini spine:
+// - sets Active only (same as main shelf)
+setActiveId(childId);
+render();
+renderBookView();
+});
+
+// =========================
+// Book View: Drag & Drop reorder (miniShelf)
+// =========================
+miniShelf.addEventListener("dragover", (e) => {
+  e.preventDefault();
+});
+
+miniShelf.addEventListener("drop", (e) => {
+  e.preventDefault();
+
+  if (!bvDragBookId) return;
+
+  const state = loadState();
+  const current = getCurrentBookFromStack(state);
+  if (!current) return;
+
+  current.children = current.children || [];
+
+  const fromIdx = current.children.findIndex(x => x.id === bvDragBookId);
+  if (fromIdx < 0) return;
+
+  const targetWrap = e.target.closest(".miniBook");
+  const targetId = targetWrap ? targetWrap.dataset.bookId : null;
+
+  let toIdx = targetId ? current.children.findIndex(x => x.id === targetId) : -1;
+
+  // Dropped on empty area → send to end
+  if (toIdx < 0) toIdx = current.children.length - 1;
+
+  // Same position → do nothing
+  if (toIdx === fromIdx) return;
+
+  // Reorder
+  const [moved] = current.children.splice(fromIdx, 1);
+  current.children.splice(toIdx, 0, moved);
+
+  saveState(state);
+  render();
+  renderBookView();
+});
+
+// Open/close
+
+function setBookViewMode(mode) {
+  if (!bookView) return;
+  bookView.dataset.view = mode; // "front" or "notes"
+}
+
+function openBookView(bookId) {
+  const state = loadState();
+  const book = findBookById(state.roots, bookId);
+  if (!book) return;
+
+  bookViewStack = [bookId];
+  notePageIndex = 0;
+
+  bookViewBg.style.display = "block";
+  bookViewBg.setAttribute("aria-hidden", "false");
+
+  setBookViewMode("front");
+  renderBookView();
+}
+
+function closeBookView() {
+  bookViewStack = [];
+  notePageIndex = 0;
+
+  bookViewBg.style.display = "none";
+  bookViewBg.setAttribute("aria-hidden", "true");
+}
+
+closeBookViewBtn.addEventListener("click", closeBookView);
+backBookViewBtn.addEventListener("click", () => {
+  if (bookViewStack.length > 1) {
+    bookViewStack.pop();     // go back one level
+    notePageIndex = 0;       // reset notes pager for the newly revealed book
+    setBookViewMode("front");
+    renderBookView();
+  } else {
+    closeBookView();         // if at the top, Back behaves like Close
+  }
+});
+bookViewBg.addEventListener("click", (e) => {
+  if (e.target === bookViewBg) closeBookView();
+});
+
+// ESC closes Book View first, then Notes modal
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+
+  if (bookViewBg && bookViewBg.style.display === "block") {
+    closeBookView();
+    return;
+  }
+
+  if (modalBg && modalBg.style.display === "flex") {
+    closeNotes();
+    return;
+  }
+});
+
+// Save settings (Rename/Colour)
+saveBookSettingsBtn.addEventListener("click", () => {
+  const state = loadState();
+  const book = getCurrentBookFromStack(state);
+  if (!book) return;
+
+  book.name = (renameInput.value || "").trim() || book.name;
+  book.color = normalizeHex(recolorInput.value || book.color);
+  book.textColor = normalizeTextHex(reTextColor.value || book.textColor || "#ffffff");
+
+  saveState(state);
+  render();        // refresh main shelf names/colors too
+  renderBookView();
+});
+
+// Notes typing saves to current page
+pageNotesArea.addEventListener("input", () => {
+  const state = loadState();
+  const book = getCurrentBookFromStack(state);
+  if (!book) return;
+
+  ensurePages(book);
+  book.pages[notePageIndex] = pageNotesArea.value;
+  book.notes = book.pages[0] ?? ""; // keep legacy in sync
+
+  saveState(state);
+});
+
+// Turn pages
+prevNotePageBtn.addEventListener("click", () => {
+  notePageIndex = Math.max(0, notePageIndex - 1);
+  renderBookView();
+});
+
+nextNotePageBtn.addEventListener("click", () => {
+  const state = loadState();
+  const book = getCurrentBookFromStack(state);
+  if (!book) return;
+
+  ensurePages(book);
+  notePageIndex = Math.min(book.pages.length - 1, notePageIndex + 1);
+  renderBookView();
+});
+
+// Add/delete page
+addPageBtn.addEventListener("click", () => {
+  const state = loadState();
+  const book = getCurrentBookFromStack(state);
+  if (!book) return;
+
+  ensurePages(book);
+  book.pages.push("");
+  notePageIndex = book.pages.length - 1;
+
+  saveState(state);
+  renderBookView();
+});
+
+deletePageBtn.addEventListener("click", () => {
+  const state = loadState();
+  const book = getCurrentBookFromStack(state);
+  if (!book) return;
+
+  ensurePages(book);
+
+  // Optional safety: don't allow deleting the last remaining page
+  if (book.pages.length <= 1) {
+    alert("You can’t delete the last page.");
+    return;
+  }
+
+  const pageLabel = `Page ${notePageIndex + 1} / ${book.pages.length}`;
+  const ok = confirm(`Delete ${pageLabel}?\n\nThis cannot be undone.`);
+  if (!ok) return;
+
+  book.pages.splice(notePageIndex, 1);
+  notePageIndex = Math.min(notePageIndex, book.pages.length - 1);
+
+  // Keep legacy notes in sync
+  book.notes = book.pages[0] ?? "";
+
+  saveState(state);
+  renderBookView();
+});
+
+// Add subfolder inside the open book
+addSubBtn.addEventListener("click", () => {
+  const state = loadState();
+  const book = getCurrentBookFromStack(state);
+  if (!book) return;
+
+  const nm = (subName.value || "").trim();
+  if (!nm) return alert("Give the subfolder a name.");
+
+  book.children = book.children || [];
+  book.children.push(mkBook(nm, subColor.value || "#6b7280", subTextColor.value || "#ffffff"));
+
+  saveState(state);
+  subName.value = "";
+  setTextPreview(subTextPreview, subColor.value, subTextColor.value);
+  render();
+  renderBookView();
+});
+
+goNotesBtn.addEventListener("click", () => { setBookViewMode("notes"); renderBookView(); });
+goFrontBtn.addEventListener("click", () => { setBookViewMode("front"); renderBookView(); });
+
+// =========================
+// Swipe / drag navigation (Book View)
+// - Mobile: swipe
+// - Desktop: click-drag swipe
+// =========================
+
+// =========================
+// Swipe / drag navigation (Book View)
+// - Mobile: swipe
+// - Desktop: click-drag swipe
+// =========================
+(function enableBookViewSwipe() {
+  const swipeEl = document.querySelector(".bookPages");
+  if (!swipeEl) return;
+
+function isInteractive(el) {
+  return !!el?.closest(
+    "textarea, input, select, button, a, [contenteditable='true'], " +
+    ".miniShelf, .miniBook, .miniSpine, " +
+    ".bookViewTop, .bookCutBar"
+  );
+}
+
+  const SWIPE_PX = 70;
+  const AXIS_LOCK_PX = 10;
+  const H_V_RATIO = 1.25;
+
+  let tracking = false;
+  let startX = 0, startY = 0, lastX = 0, lastY = 0;
+  let decidedAxis = false;
+  let isHorizontal = false;
+
+  function reset() {
+    tracking = false;
+    decidedAxis = false;
+    isHorizontal = false;
+  }
+
+  function onSwipe(dx) {
+    const state = loadState();
+    const book = getCurrentBookFromStack(state);
+    if (!book) return;
+
+    const swipeLeft = dx < 0;
+    const currentView = bookView?.dataset?.view || "front";
+
+    if (currentView === "front") {
+      if (swipeLeft) setBookViewMode("notes");
+      renderBookView();
+      return;
+    }
+
+    ensurePages(book);
+
+    if (swipeLeft) {
+      notePageIndex = Math.min(book.pages.length - 1, notePageIndex + 1);
+      renderBookView();
+    } else {
+      if (notePageIndex > 0) {
+        notePageIndex = Math.max(0, notePageIndex - 1);
+        renderBookView();
+      } else {
+        setBookViewMode("front");
+        renderBookView();
+      }
+    }
+  }
+
+  // ---------- Pointer Events (best: covers mobile + desktop drag) ----------
+  if ("PointerEvent" in window) {
+    swipeEl.addEventListener("pointerdown", (e) => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      if (isInteractive(e.target)) return;
+
+      tracking = true;
+      startX = lastX = e.clientX;
+      startY = lastY = e.clientY;
+      decidedAxis = false;
+      isHorizontal = false;
+
+      swipeEl.setPointerCapture(e.pointerId);
+    });
+
+    swipeEl.addEventListener("pointermove", (e) => {
+      if (!tracking) return;
+
+      lastX = e.clientX;
+      lastY = e.clientY;
+
+      const dx = lastX - startX;
+      const dy = lastY - startY;
+
+      if (!decidedAxis) {
+        if (Math.abs(dx) < AXIS_LOCK_PX && Math.abs(dy) < AXIS_LOCK_PX) return;
+        decidedAxis = true;
+        isHorizontal = Math.abs(dx) > Math.abs(dy) * H_V_RATIO;
+      }
+
+      if (isHorizontal) e.preventDefault();
+    }, { passive: false });
+
+    swipeEl.addEventListener("pointerup", () => {
+      if (!tracking) return;
+
+      const dx = lastX - startX;
+      if (isHorizontal && Math.abs(dx) >= SWIPE_PX) onSwipe(dx);
+
+      reset();
+    });
+
+    swipeEl.addEventListener("pointercancel", reset);
+    return; // done
+  }
+
+  // ---------- Touch fallback (older Safari/odd environments) ----------
+  swipeEl.addEventListener("touchstart", (e) => {
+    if (isInteractive(e.target)) return;
+
+    const t = e.touches[0];
+    tracking = true;
+    startX = lastX = t.clientX;
+    startY = lastY = t.clientY;
+    decidedAxis = false;
+    isHorizontal = false;
+  }, { passive: true });
+
+  swipeEl.addEventListener("touchmove", (e) => {
+    if (!tracking) return;
+
+    const t = e.touches[0];
+    lastX = t.clientX;
+    lastY = t.clientY;
+
+    const dx = lastX - startX;
+    const dy = lastY - startY;
+
+    if (!decidedAxis) {
+      if (Math.abs(dx) < AXIS_LOCK_PX && Math.abs(dy) < AXIS_LOCK_PX) return;
+      decidedAxis = true;
+      isHorizontal = Math.abs(dx) > Math.abs(dy) * H_V_RATIO;
+    }
+
+    if (isHorizontal) e.preventDefault();
+  }, { passive: false });
+
+  swipeEl.addEventListener("touchend", () => {
+    if (!tracking) return;
+
+    const dx = lastX - startX;
+    if (isHorizontal && Math.abs(dx) >= SWIPE_PX) onSwipe(dx);
+
+    reset();
+  }, { passive: true });
+
+})();
+
+// Render Book View
+function renderBookView() {
+  const state = loadState();
+  const book = getCurrentBookFromStack(state);
+  if (!book) { closeBookView(); return; }
+
+  ensurePages(book);
+  saveState(state); // persist migration safely
+
+// Show CUT row inside Book View (same as main shelf)
+const cutId = getCutId();
+const cutBook = cutId ? findBookById(state.roots, cutId) : null;
+
+if (cutBook) {
+  bookCutBar.style.display = "block";
+  bookCutBar.innerHTML = `
+    <div class="bookCutRow">
+      <div class="bookCutPill" style="background:${cutBook.color}">
+        CUT: ${escapeHtml(cutBook.name)}
+      </div>
+      <div class="bookCutActions">
+        <button type="button" class="small" data-act="pasteCutBV">Paste here</button>
+        <button type="button" class="small danger" data-act="cancelCutBV">Cancel</button>
+      </div>
+    </div>
+  `;
+} else {
+  bookCutBar.style.display = "none";
+  bookCutBar.innerHTML = "";
+}
+
+  // Breadcrumbs
+  const names = bookViewStack
+    .map(id => {
+      const b = findBookById(state.roots, id);
+      return b ? b.name : "Unknown";
+    });
+  bookCrumbs.textContent = names.join(" › ");
+
+  // Right page: title + settings
+  bookTitle.textContent = book.name;
+  renameInput.value = book.name;
+  recolorInput.value = book.color;
+if (recolorPreview) recolorPreview.style.background = book.color;
+
+reTextColor.value = book.textColor || "#ffffff";
+setTextPreview(reTextPreview, book.color, reTextColor.value);
+
+  // Notes pages
+  if (notePageIndex < 0) notePageIndex = 0;
+  if (notePageIndex > book.pages.length - 1) notePageIndex = book.pages.length - 1;
+
+  pageNotesArea.value = book.pages[notePageIndex] ?? "";
+  notePageNum.textContent = `Page ${notePageIndex + 1} / ${book.pages.length}`;
+
+  // Left page: subfolders shelf (same features as main shelf)
+  const activeId = getActiveId();
+
+  miniShelf.innerHTML = "";
+
+  (book.children || []).forEach(child => {
+    const wrap = document.createElement("div");
+    wrap.className = "miniBook";
+    wrap.dataset.bookId = child.id;
+
+    // Drag & drop (disable drag if this child is the ACTIVE book)
+    if (child.id !== activeId) {
+      wrap.draggable = true;
+
+      wrap.addEventListener("dragstart", (e) => {
+        bvDragBookId = child.id;
+        wrap.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+      });
+
+      wrap.addEventListener("dragend", () => {
+        bvDragBookId = null;
+        wrap.classList.remove("dragging");
+      });
+    } else {
+      wrap.draggable = false;
+      wrap.style.opacity = "0.55";
+    }
+
+    wrap.innerHTML = `
+      <div class="miniSpine" style="background:${child.color}">
+        <span style="color:${child.textColor || "#ffffff"}">${escapeHtml(child.name)}</span>
+      </div>
+      <button type="button" class="miniOpenBtn" data-act="miniOpen" title="Open book">📖</button>
+      <button type="button" class="miniGearBtn" data-act="miniGear" title="Options">⚙️</button>
+    `;
+
+    miniShelf.appendChild(wrap);
+  });
+}
+
+  // First render
+  render();
 </script>
+
 </body>
 </html>

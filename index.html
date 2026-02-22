@@ -860,7 +860,20 @@ width: 50px;
     <span id="bookCountBadge" title="Total books in library (including subfolders)">0</span>
   </div>
 
-  <button type="button" class="small ghost" id="backBtn" title="Go up one level">⬅ Up</button>
+  <div style="display:flex; align-items:center; gap:8px;">
+    <select id="profileSelect" title="Profile" style="
+      background:#0f1115; color:var(--text);
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius:12px;
+      padding:7px 10px;
+      font-size:13px;
+      cursor:pointer;
+    "></select>
+
+    <button type="button" class="small ghost" id="addProfileBtn" title="Add a new profile">＋</button>
+
+    <button type="button" class="small ghost" id="backBtn" title="Go up one level">⬅ Up</button>
+  </div>
 </div>
   <div class="sub" id="activeLine">Active: (none)</div>
 
@@ -1087,18 +1100,94 @@ width: 50px;
 </div> <!-- end .bookViewBg -->
 
 <script>
-  const SAVE_SLOT = "v1";
-  const REMINDERS_ENABLED = false;
+const SAVE_SLOT = "v1";
+const REMINDERS_ENABLED = false;
 
-  const FILE_ID = btoa(unescape(encodeURIComponent(location.href)))
-    .replace(/=+/g, "").slice(0, 24);
-  const NS = `ML_${FILE_ID}_${SAVE_SLOT}_`;
+const FILE_ID = btoa(unescape(encodeURIComponent(location.href)))
+  .replace(/=+/g, "").slice(0, 24);
 
-  const LS_KEY    = NS + "modes";
-  const LS_ACTIVE = NS + "active";
-  const LS_REM    = NS + "reminder";
-  const LS_PATH   = NS + "path";
-  const LS_CUT    = NS + "cut";
+// ---------- Profiles (simple + safe) ----------
+// Profile 1 MUST map to the original namespace exactly, so no data is lost.
+const GLOBAL_NS = `ML_${FILE_ID}_${SAVE_SLOT}_`;
+const LS_PROFILE = GLOBAL_NS + "profile";        // stores current profile number
+const LS_PCOUNT  = GLOBAL_NS + "profilesCount";  // stores how many profiles exist
+
+function getProfile() {
+  const raw = localStorage.getItem(LS_PROFILE) || "1";
+  const n = Math.max(1, parseInt(raw, 10) || 1);
+  return String(n);
+}
+
+function setProfile(nStr) {
+  localStorage.setItem(LS_PROFILE, String(nStr));
+}
+
+function getProfileCount() {
+  const raw = localStorage.getItem(LS_PCOUNT) || "1";
+  const n = Math.max(1, parseInt(raw, 10) || 1);
+  return n;
+}
+
+function setProfileCount(n) {
+  localStorage.setItem(LS_PCOUNT, String(Math.max(1, n | 0)));
+}
+
+// Determine current profile
+const PROFILE = getProfile();
+const PROFILE_COUNT = getProfileCount();
+
+// Profile namespace:
+// - Profile 1: original namespace (no suffix) ✅ preserves existing data
+// - Profile 2+: suffix added to keep data separate
+const NS = (PROFILE === "1")
+  ? `ML_${FILE_ID}_${SAVE_SLOT}_`
+  : `ML_${FILE_ID}_${SAVE_SLOT}_P${PROFILE}_`;
+
+// Now keys are based on the selected profile
+const LS_KEY    = NS + "modes";
+const LS_ACTIVE = NS + "active";
+const LS_REM    = NS + "reminder";
+const LS_PATH   = NS + "path";
+const LS_CUT    = NS + "cut";
+
+// Hook up the UI (top right)
+const profileSelect = document.getElementById("profileSelect");
+const addProfileBtn = document.getElementById("addProfileBtn");
+
+function rebuildProfileSelect() {
+  if (!profileSelect) return;
+
+  const count = getProfileCount();
+  profileSelect.innerHTML = "";
+  for (let i = 1; i <= count; i++) {
+    const opt = document.createElement("option");
+    opt.value = String(i);
+    opt.textContent = `Profile ${i}`;
+    profileSelect.appendChild(opt);
+  }
+  profileSelect.value = getProfile();
+}
+
+if (profileSelect) {
+  // Ensure the current profile isn't outside count (rare edge)
+  if (parseInt(PROFILE, 10) > PROFILE_COUNT) setProfileCount(parseInt(PROFILE, 10));
+
+  rebuildProfileSelect();
+
+  profileSelect.addEventListener("change", () => {
+    setProfile(profileSelect.value);
+    location.reload(); // simplest + safest: reload with new namespace
+  });
+}
+
+if (addProfileBtn) {
+  addProfileBtn.addEventListener("click", () => {
+    const next = getProfileCount() + 1;
+    setProfileCount(next);
+    setProfile(String(next));
+    location.reload(); // new profile loads as fresh default state
+  });
+}
 
   // ✅ Reset helper (for testing)
   window.ML_RESET = function () {
@@ -1638,9 +1727,10 @@ if (activeBook) {
 topShelf.innerHTML = html;
 
     // ✅ Hide “Folder: (root)” completely when at root
-    activeLine.textContent =
-      "Active: " + (activeBook ? activeBook.name : "(none)") +
-      (crumbs.length ? `  •  Folder: ${crumbs.join(" › ")}` : "");
+activeLine.textContent =
+  `Profile ${PROFILE}  •  ` +
+  "Active: " + (activeBook ? activeBook.name : "(none)") +
+  (crumbs.length ? `  •  Folder: ${crumbs.join(" › ")}` : "");
 
     // Main grid shelf spines
     grid.innerHTML = "";
